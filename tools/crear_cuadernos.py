@@ -28,6 +28,7 @@ RAIZ = Path(__file__).resolve().parent.parent
 DESTINO = RAIZ / "notebooks"
 REPO = "ITH-MGL-MN/U5_derivadas_integrales_EDO"
 FIGURAS = "https://raw.githubusercontent.com/" + REPO + "/main/docs/figuras/libro/"
+DOCS = "https://github.com/" + REPO + "/blob/main/docs/"
 
 
 # ---------------------------------------------------------------------------
@@ -43,6 +44,16 @@ def _md(texto: str):
 def _py(texto: str):
     """Celda de código, sin espacios sobrantes al inicio ni al final."""
     return nbf.v4.new_code_cell(texto.strip() + "\n")
+
+
+def _rellena(texto: str) -> str:
+    """Cambia los marcadores de ruta por las URLs publicadas.
+
+    Los cuadernos se leen en Colab, así que los enlaces a las figuras y a las
+    guías tienen que ser absolutos: un enlace relativo no lleva a ningún lado
+    fuera de GitHub.
+    """
+    return texto.replace("@FIGURAS@", FIGURAS).replace("@DOCS@", DOCS)
 
 
 def _nuevo(titulo_curso: str):
@@ -244,17 +255,17 @@ La derivada es un límite; con datos nunca llegamos al límite, solo a un
 cociente de diferencias. La pregunta del tema no es "cuál es la fórmula" sino
 **de qué lado del punto tomo la muestra** y **cuánto separo una muestra de otra**.
 
-Las tres respuestas clásicas están en las figuras 23.1 a 23.3 del libro: hacia
-adelante, hacia atrás y centrada. Cambian dos cosas: el **orden del error** y la
-**causalidad** (si para calcular la derivada de hoy necesito una muestra de
-mañana, no puedo usarla en un lazo de control).
+Las tres respuestas clásicas son las de las figuras 23.1 a 23.3 del libro:
+hacia adelante, hacia atrás y centrada. Cambian dos cosas: el **orden del
+error** y la **causalidad** (si para calcular la derivada de hoy necesito una
+muestra de mañana, no puedo usarla en un lazo de control).
 
 ### Figura 23.4 · el caso que sí existe en la práctica
 
 ![Figura 23.4](@FIGURAS@fig23_4_temperatura.png)
 
 El libro mide la temperatura del suelo a 0, 1.25 y 3.75 cm de profundidad y
-obtiene 13.5, 12 y 10 °C. Para estimar $\\mathrm{d}T/\\mathrm{d}z$ hay que dividir
+obtiene 13.5, 12 y 10 °C. Para estimar $\\frac{\\mathrm{d}T}{\\mathrm{d}z}$ hay que dividir
 diferencias de temperatura entre diferencias de profundidad **que no son
 iguales**. Ese es el caso normal: los instrumentos no muestrean parejo.
 
@@ -287,8 +298,8 @@ derivar hay que decidir si se filtra.
 | Derivar con la mejor precisión y sin prisa | diferencia centrada | Su error es $O(h^2)$ y cuesta lo mismo |
 | Derivar una señal ruidosa | filtrar y después centrada | El ruido se amplifica como $1/h$ |
 
-Todo el catálogo —con los nombres exactos en Python y en MATLAB— está en
-[docs/guias/catalogo_metodos.md](../docs/guias/catalogo_metodos.md).
+Todo el catálogo (con los nombres exactos en Python y en MATLAB, y las figuras
+del libro) está en la [guía de derivación numérica](@DOCS@guias/catalogo_01_derivacion.md).
 """
 
 TEORIA_01 = """
@@ -532,8 +543,9 @@ CIERRE_MD_01 = """
 `enviar()` manda el resultado al backend del curso; `consultar_calificacion()`
 te dice lo que quedó guardado. Sin conexión, `enviar()` avisa y no falla.
 
-Si te quedó duda de algún método que no programaste, el catálogo está en
-[docs/guias/catalogo_metodos.md](../docs/guias/catalogo_metodos.md).
+Si te quedó duda de algún método que no programaste, la
+[guía de métodos](@DOCS@guias/README.md) tiene la tabla de decisión rápida y los
+nombres en Python y en MATLAB.
 """
 
 
@@ -541,10 +553,10 @@ def cuaderno_01():
     """Arma el cuaderno U5_01 completo."""
     cuaderno = _nuevo("Derivación numérica")
     celdas = [
-        _md(TITULO_01.replace("@FIGURAS@", FIGURAS)),
+        _md(_rellena(TITULO_01)),
         _py(_entorno("u5_01_derivacion")),
         _py(CUENTA),
-        _md(INTRO_01.replace("@FIGURAS@", FIGURAS)),
+        _md(_rellena(INTRO_01)),
         _py("""
 #@title 🧪 2.2 · Pregunta 1
 pregunta(1)
@@ -626,7 +638,7 @@ CASO = caso()
 #@title 🧪 5.1.3 · Pregunta 3
 pregunta(3)
 """),
-        _md(CIERRE_MD_01),
+        _md(_rellena(CIERRE_MD_01)),
     ]
     celdas.extend(_preguntas_del_cierre())
     cuaderno["cells"] = celdas

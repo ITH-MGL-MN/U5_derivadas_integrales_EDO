@@ -303,15 +303,34 @@ es el cuaderno donde **decidir** es todo el ejercicio.
 
 Solo el proyecto. Sin teoría nueva. §8.
 
-### Tabla maestra — `docs/guias/catalogo_metodos.md`
+### Guías por cuaderno — `docs/guias/`
 
-Un solo lugar, pública, con una fila por método y seis columnas:
+Una guía por cuaderno, más un índice con la tabla de decisión rápida:
 
-| Método | Ecuación | En Python | En MATLAB | Cuándo usarlo | Cuándo NO |
-|---|---|---|---|---|---|
+```text
+docs/guias/
+├── README.md                     # índice + decisión rápida + errores típicos
+├── catalogo_01_derivacion.md
+├── catalogo_02_integracion.md
+├── catalogo_03_edo_un_paso.md
+└── catalogo_04_edo_multipaso.md
+```
 
-Cada subtema tipo B la cita; el cuaderno 05 la usa como chuleta. Es el
-artefacto que responde "qué usar en cada caso" sin abrir cinco cuadernos.
+Cada guía trae las ecuaciones, una tabla `Método · En Python · En MATLAB ·
+Cuándo sí · Cuándo no`, y **las figuras del libro que le tocan, incluidas en el
+documento y con su lectura**. Cada subtema tipo B cita la suya; el cuaderno 05
+usa el índice como chuleta. Es el artefacto que responde "qué usar en cada
+caso" sin abrir cinco cuadernos.
+
+Reglas de estas guías:
+
+1. **Sin enlaces a rutas locales**: los cuadernos se leen en Colab y en GitHub,
+   así que todo enlace es una URL absoluta.
+2. **Sin notas de autor**: nada de explicar cómo se escribe el markdown ni cómo
+   se comporta Colab. Eso vive en este plan, no en el material del alumno.
+3. **Ninguna figura anunciada sin incluirla.** Si se menciona una figura, va la
+   imagen y su lectura; si no hay imagen disponible, se escribe la fórmula y se
+   cita el libro, sin prometer figuras.
 
 ---
 
@@ -565,8 +584,8 @@ temporal, para poder abrir los archivos a mano cuando algo falle.
 - [x] **F2 · Motor.** `privado/api.py`, `banco.py`, `califica.py`, `casos.py`
       (cuaderno 01), `identidad.py`, `envio.py`, `ajustes.py`; 40 pruebas.
       Pendiente de F2: los casos de los cuadernos 02–05.
-- [x] **F3 · Catálogo.** `docs/guias/catalogo_metodos.md` con los cuatro
-      subtemas tipo B, la tabla de decisión rápida y el diagnóstico de rigidez.
+- [x] **F3 · Guías.** `docs/guias/`: índice con la tabla de decisión rápida y
+      una guía por cuaderno, con sus figuras incluidas.
 - [ ] **F4 · Preguntas.** 15 preguntas (3 por cuaderno), `.md` + `.py`;
       `revisar_preguntas.py` en verde.
 - [x] **F5 · Figuras.** `manifest.csv` + `generar_figuras.py`; extraídas 23.4 y

@@ -1,4 +1,9 @@
 archivo_destino,capitulo,pagina,indice,numero_libro,pie,cuaderno
+fig21_4_trapecio.png,21,page_0002,0,21.4,"Representacion grafica de la regla del trapecio: se sustituye el area bajo la curva por el area del trapecio",U5_02
+fig21_12_simpson_combinado.png,21,page_0014,0,21.12,"Uso conjunto de Simpson 1/3 y 3/8 para cubrir todo el intervalo",U5_02
 fig23_4_temperatura.png,23,page_0005,0,23.4,"Temperatura contra la profundidad bajo el suelo: tres puntos (z=0, 1.25 y 3.75 cm) con T=13.5, 12 y 10 C",U5_01
 fig23_5_ruido_1.png,23,page_0006,0,23.5,"Paneles a) y c): datos limpios y su derivada, que sale suave",U5_01
 fig23_5_ruido_2.png,23,page_0006,1,23.5,"Paneles b) y d): los mismos datos con un error minimo y su derivada, que ya oscila",U5_01
+fig25_9_heun.png,25,page_0009,0,25.9,"Metodo de Heun: a) predictor y b) corrector; en el libro la figura ocupa dos imagenes contiguas",U5_03
+fig25_15_rk4.png,25,page_0019,0,25.15,"Runge-Kutta de cuarto orden: las cuatro pendientes k1 a k4 y la pendiente efectiva",U5_03
+fig26_6_multipaso.png,26,page_0010,0,26.6,"Estrategia multipaso: interpolacion de arranque y reutilizacion de los puntos ya calculados",U5_04
