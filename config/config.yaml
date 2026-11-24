@@ -1,0 +1,47 @@
+# Parámetros de la Unidad 5.
+#
+# Este archivo es PÚBLICO: no lleva credenciales. El token del webhook y la URL
+# del Apps Script se definen en `config/privado.yaml`, que vive en la rama
+# `test` y está en .gitignore de `main`.
+
+unidad:
+  id: U5
+  nombre: Derivadas, integrales y ecuaciones diferenciales
+  materia: Métodos Numéricos
+  temas:
+    - 5.1 Derivación numérica
+    - 5.2 Integración numérica
+    - 5.3 Ecuaciones diferenciales de un paso
+    - 5.4 Ecuaciones diferenciales multipaso y rigidez
+    - 5.5 Proyecto integrador
+
+cuadernos:
+  u5_01_derivacion: U5_01_Derivacion_Numerica
+  u5_02_integracion: U5_02_Integracion_Numerica
+  u5_03_edo_un_paso: U5_03_EDO_Un_Paso
+  u5_04_edo_multipaso: U5_04_EDO_Multipaso
+  u5_05_integrador: U5_05_Proyecto_Integrador
+
+evaluacion:
+  tolerancia_funcion: 1.0e-6      # funciones que programa el alumno
+  tolerancia_mano: 1.5e-4         # actividades a mano (4 decimales)
+  max_intentos: 2
+  accion: guardar
+  webhook_token: ""               # rama test: config/privado.yaml
+  apps_script_url: ""             # rama test: config/privado.yaml
+
+# Datos públicos de los ejemplos que aparecen en la teoría y en el sitio.
+# Los datos personales de cada alumno NO viven aquí: los siembra la semilla
+# dentro de la rama test.
+datos:
+  derivacion_ejemplo:
+    x: [0.0, 0.1, 0.2, 0.3]
+    f: [0.0, 0.0998, 0.1987, 0.2955]
+  integracion_ejemplo:
+    a: 0.0
+    b: 1.0
+    n: 4
+  edo_paracaidista:
+    g: 9.81
+    m: 68.1
+    c: 12.5

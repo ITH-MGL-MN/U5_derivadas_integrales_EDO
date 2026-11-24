@@ -1,0 +1,42 @@
+# Bytecode y entornos
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+.ipynb_checkpoints/
+*.ipynb_checkpoints*
+
+# Material privado: vive en la rama test y se agrega con `git add -f`
+privado/
+config/privado.yaml
+tests/test_privado.py
+tools/build_grader.py
+tools/revisar_preguntas.py
+
+# Credenciales y estado de envíos
+config/.envios.json
+grader_ofuscado.txt
+
+# Documentos fuente del profesor (borradores de las tareas)
+/U5_0*.md
+
+# Volcados y temporales
+notebooklm/
+_tmp_*
+*.tmp
+_site/
+docs/_extraccion_*.json
+
+# LaTeX
+*.aux
+*.log
+*.out
+*.toc
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+
+# Sistema
+.DS_Store
+Thumbs.db
+desktop.ini
