@@ -3,7 +3,7 @@
 Segunda versión del repositorio de la Unidad 5 (Métodos Numéricos, ITH 2026).
 
 > ⚠️ **En construcción.** La arquitectura está cerrada en
-> [plan U5_derivadas_integrales_EDO_V2.md](plan%20U5_derivadas_integrales_EDO_V2.md);
+> [plan U5_derivadas_integrales_EDO.md](plan%20U5_derivadas_integrales_EDO.md);
 > los cuadernos y el motor se están escribiendo.
 
 ---
@@ -26,6 +26,10 @@ lo que de verdad se escribe en un microcontrolador a alta velocidad.
 Seis funciones en toda la unidad. Todo lo demás —trapecio, Simpson, Heun,
 RK4, Adams–Bashforth–Moulton, BDF, LSODA— se ve en su forma teórica, con su
 equivalente en `numpy`/`scipy` y en MATLAB, y con **cuándo usarlo y cuándo no**.
+
+📖 La tabla maestra —método, ecuación del libro, nombre en Python y en MATLAB,
+cuándo usarlo y cuándo no— está en
+[docs/guias/catalogo_metodos.md](docs/guias/catalogo_metodos.md).
 ---
 
 ## 🧭 Cómo se recorre un cuaderno
@@ -48,7 +52,7 @@ Siempre la misma secuencia, para que la navegación no cueste:
 ## 📁 Mapa del repositorio
 
 ```text
-U5_derivadas_integrales_EDO_V2/
+U5_derivadas_integrales_EDO/
 ├── notebooks/      # los cinco cuadernos (autocontenidos)
 ├── lib/            # robomat.py (base del curso) y graficos.py (laboratorios)
 ├── grader/         # un blob por cuaderno, lo que carga Colab
@@ -69,18 +73,21 @@ enunciado y el `.py` con la respuesta. Viven en la rama `test`.
 **En VS Code (local).** Abre el cuaderno y ejecuta la celda 1.1: detecta los
 archivos del repositorio y no pide nada.
 
-**En Google Colab.** Abre el cuaderno desde tu fork público; la celda 1.1 monta
-tu Drive una vez, guarda el enlace de tu fork y refresca el material del curso
-en cada ejecución. No hay que editar archivos ni hacer commits: todo se escribe
+**En Google Colab.** Abre el cuaderno con el enlace que te dé el profesor y
+ejecuta la celda 1.1: deja el material del curso en tu Drive y no te pide nada.
+No hay que editar archivos, ni crear cuentas, ni copiar enlaces: todo se escribe
 dentro del cuaderno.
 
 ---
 
 ## 🌿 Ramas
 
-- **`main`** — material del alumno: cuadernos, `lib/`, `docs/`, `grader/`.
-- **`test`** — el motor (`privado/`), el banco de preguntas, las referencias y
-  las credenciales. Nada de esto se publica.
+- **`test`** — la rama de trabajo: contiene todo, incluidos el motor
+  (`privado/`), el banco de preguntas y las credenciales. Aquí se desarrolla y
+  se depura en local, sin construir el paquete de `grader/`.
+- **`main`** — la rama publicada: solo el material del alumno y los paquetes de
+  `grader/*.txt`. Se actualiza copiando rutas desde `test`, nunca con un merge
+  (el merge arrastraría lo privado). La receta está en el plan.
 
 ---
 

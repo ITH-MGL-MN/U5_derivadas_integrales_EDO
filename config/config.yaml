@@ -23,6 +23,7 @@ cuadernos:
   u5_05_integrador: U5_05_Proyecto_Integrador
 
 evaluacion:
+  dominio_correo: hermosillo.tecnm.mx   # el correo del alumno debe ser de aquí
   tolerancia_funcion: 1.0e-6      # funciones que programa el alumno
   tolerancia_mano: 1.5e-4         # actividades a mano (4 decimales)
   max_intentos: 2

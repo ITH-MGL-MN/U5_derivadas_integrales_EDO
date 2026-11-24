@@ -1,0 +1,4 @@
+archivo_destino,capitulo,pagina,indice,numero_libro,pie,cuaderno
+fig23_4_temperatura.png,23,page_0005,0,23.4,"Temperatura contra la profundidad bajo el suelo: tres puntos (z=0, 1.25 y 3.75 cm) con T=13.5, 12 y 10 C",U5_01
+fig23_5_ruido_1.png,23,page_0006,0,23.5,"Paneles a) y c): datos limpios y su derivada, que sale suave",U5_01
+fig23_5_ruido_2.png,23,page_0006,1,23.5,"Paneles b) y d): los mismos datos con un error minimo y su derivada, que ya oscila",U5_01

@@ -1,4 +1,4 @@
-# Plan · U5_derivadas_integrales_EDO_V2
+# Plan · U5_derivadas_integrales_EDO
 
 Arquitectura y alcance de la segunda versión de la Unidad 5. Toma la forma de
 `U4_Repo` (cuadernos + `docs/` + `lib/` + `grader/` + rama `test`) y corrige
@@ -59,9 +59,9 @@ tres problemas de la v1:
 ## 2. Mapa del repositorio — rama `main` (público)
 
 ```text
-U5_derivadas_integrales_EDO_V2/
+U5_derivadas_integrales_EDO/
 ├── README.md
-├── plan U5_derivadas_integrales_EDO_V2.md   # este archivo
+├── plan U5_derivadas_integrales_EDO.md   # este archivo
 ├── requirements.txt                # numpy, matplotlib, scipy
 ├── pyrightconfig.json
 ├── .devcontainer/devcontainer.json
@@ -118,36 +118,38 @@ notebooklm/  _tmp_*  *.tmp  _site/
 
 ---
 
-## 3. La rama `test` (privado)
+## 3. Ramas: en `test` se trabaja, en `main` se publica
 
-Mismo árbol que `main` más:
+**`test` es la rama de trabajo y contiene todo**: lo público y lo privado. Aquí
+se desarrolla y se depura en local, **sin** construir el paquete de `grader/`.
 
-```text
-privado/
-├── __init__.py              # reexporta api.__all__. Sin lógica.
-├── api.py                   # LAS 10 FUNCIONES QUE LLAMA EL CUADERNO
-├── ajustes.py               # constantes + credenciales
-├── identidad.py             # email → número de control → semilla → datos
-├── banco.py                 # carga preguntas y sustituye {{variables}}
-├── referencia.py            # implementación de referencia + ESPECIFICACIONES
-├── casos.py                 # casos de ingeniería: datos y rúbrica por método
-├── califica.py              # revisa MCQ, funciones y caso; arma el puntaje
-├── envio.py                 # única puerta a la red (Apps Script)
-└── preguntas/
-    ├── u5_01_derivacion/    # p01_*.md + p01_*.py + __init__.py
-    ├── u5_02_integracion/
-    ├── u5_03_edo_un_paso/
-    ├── u5_04_edo_multipaso/
-    └── u5_05_integrador/
+**`main` es la rama publicada y contiene solo lo público.** No se edita a mano:
+se actualiza copiando rutas desde `test`. Nunca con `git merge test`, porque el
+merge arrastraría `privado/` y las respuestas — `.gitignore` no detiene a un
+archivo que ya está rastreado en la otra rama.
 
-config/privado.yaml          # webhook_token + apps_script_url
-tests/test_privado.py
-tools/build_grader.py
-tools/revisar_preguntas.py
+Receta de publicación (solo cuando toque probar de verdad en Colab):
+
+```powershell
+git switch main
+git checkout test -- notebooks lib docs site tools config/config.yaml `
+                     README.md "plan U5_derivadas_integrales_EDO.md" grader
+git commit -m "Publica U5 v2" -- notebooks lib docs site tools config/config.yaml `
+                                README.md "plan U5_derivadas_integrales_EDO.md" grader
+git switch test
 ```
 
-Regla de oro: **si revela una respuesta o una credencial, va en `test`. Si el
-alumno lo necesita para trabajar, va en `main`.**
+`grader/` entra en esa lista **después** de correr `tools/build_grader.py`
+(fase F8). Durante el desarrollo no se empaqueta nada: como `privado/` existe en
+el árbol, la celda 1.1 del cuaderno arranca en modo local, que es el modo en el
+que se depura con F12 y `pdb`.
+
+| Rama | Contiene | Cuándo se toca |
+|---|---|---|
+| `test` | todo: público + `privado/` + preguntas | todos los días, commit por cambio |
+| `main` | solo lo público + `grader/*.txt` | al publicar, copiando rutas |
+
+Regla de oro: **si revela una respuesta o una credencial, solo vive en `test`.**
 
 ---
 
@@ -199,7 +201,7 @@ siempre empieza con la misma secuencia de arranque.
 
 | Numeral | Celda | Tipo | Qué tiene |
 |---|---|---|---|
-| **1.1** | 1 | código | **Entorno**: monta Drive en Colab, clona/actualiza `lib/` y `grader/` desde GitHub, importa `robomat`, deja la API lista (§11) |
+| **1.1** | 1 | código | **Entorno**: monta el Drive del alumno y deja ahí el material del curso (`lib/` y el paquete del motor), sin pedir nada por teclado ni hablar de repositorios; importa `robomat`, deja la API lista (§11) |
 | **1.2** | 2 | código | **Cuenta**: `identificacion()` — email, nombre, número de control, semilla |
 | **2.1** | 3 | markdown | **Introducción general del tema** y diferencias entre métodos, con figuras explicadas |
 | **2.2** | 4 | código | **Pregunta teórica 1** (personalizada) |
@@ -443,10 +445,12 @@ síntomas → causa → qué cambiar.
 
 ## 13. Reglas de estilo y documentación
 
-- **Ecuaciones largas: siempre `$$ … $$` en línea propia.** Nunca `$…$` dentro
-  de una celda de tabla, y nunca `\tag{}` dentro de una tabla: **Google Colab
-  corta la ecuación** cuando la tabla la envuelve. Si la ecuación es larga, va
-  fuera de la tabla y dentro de la tabla solo se cita "ec. (21.4)".
+- **Ecuaciones largas: siempre `$$ … $$` en línea propia.** Nunca un bloque
+  `$$` ni `\tag{}` dentro de una celda de tabla: **Google Colab corta la
+  ecuación** cuando la tabla la envuelve. Dentro de una tabla solo se permite
+  matemática corta y en línea (`$O(h^2)$`, `$1/h$`); si la ecuación lleva
+  fracciones, raíces o varias líneas, va fuera y la tabla la cita como
+  "ec. (21.4)".
 - Toda figura lleva su lectura de 2–4 líneas (§7).
 - **Docstring obligatorio** en toda función pública:
   ```
@@ -490,6 +494,11 @@ Cuaderno 05: A 25 · B 15 · C 30 · D 30.
 
 - `max_intentos` y tolerancias públicas en `config/config.yaml`; las tolerancias
   finas viven en `ESPECIFICACIONES` (privado).
+- **El correo debe ser institucional y traer el número de control**
+  (`evaluacion.dominio_correo` en `config/config.yaml`). Si la cuenta de Google
+  del alumno no es la institucional, la celda 1.2 lo dice y pide el correo
+  correcto: sin número de control no hay identidad verificable, y con una cuenta
+  ajena sería fácil entregar por otro.
 - Credenciales en orden: entorno → `config/privado.yaml` (rama `test`) → blob.
 - `envio.py` es la única función que toca la red. Sin credenciales, `enviar()`
   avisa «modo local: no se envió» y devuelve `{"estado": "local"}`.
@@ -515,6 +524,11 @@ else:
 
 from privado.api import *          # noqa: F403  — igual en los dos modos
 ```
+
+En Colab, `RAIZ` es la carpeta `CursoMN/material` del **Drive del alumno**: la
+celda monta el Drive y deja ahí los tres archivos que hacen falta. El origen de
+esos archivos vive en una constante de la celda y **no se muestra en pantalla**:
+el alumno no necesita saber de dónde salen, solo que el material está listo.
 
 En ambos modos quedan en el espacio de nombres las mismas once funciones y el
 paquete es **código normal**: `import privado.banco` funciona, los `.md` de las
@@ -551,13 +565,15 @@ temporal, para poder abrir los archivos a mano cuando algo falle.
 - [x] **F2 · Motor.** `privado/api.py`, `banco.py`, `califica.py`, `casos.py`
       (cuaderno 01), `identidad.py`, `envio.py`, `ajustes.py`; 40 pruebas.
       Pendiente de F2: los casos de los cuadernos 02–05.
-- [ ] **F3 · Catálogo.** `docs/guias/catalogo_metodos.md` con los 4 subtemas
-      tipo B.
+- [x] **F3 · Catálogo.** `docs/guias/catalogo_metodos.md` con los cuatro
+      subtemas tipo B, la tabla de decisión rápida y el diagnóstico de rigidez.
 - [ ] **F4 · Preguntas.** 15 preguntas (3 por cuaderno), `.md` + `.py`;
       `revisar_preguntas.py` en verde.
-- [ ] **F5 · Figuras.** `manifest.csv` + `generar_figuras.py`; teoría de cada
-      2.1, 3.1 y k.1 escrita desde `Ed7/`.
-- [ ] **F6 · Cuadernos 01–04.** Con las plantillas de §5 y el contenido de §6.
+- [x] **F5 · Figuras.** `manifest.csv` + `generar_figuras.py`; extraídas 23.4 y
+      23.5 (dos mitades). Faltan las de los cuadernos 02–05 conforme se escriban.
+- [x] **F6 · Cuaderno 01.** Generado con `tools/crear_cuadernos.py`; 27 celdas,
+      recorrido completo verificado por prueba automática (100/100).
+- [ ] **F6 · Cuadernos 02–04.** Con las plantillas de §5 y el contenido de §6.
 - [ ] **F7 · Cuaderno 05.** Integrador + `guia_integrador.md`.
 - [ ] **F8 · Empaquetado.** 5 blobs; `simular_colab.py` desde fuera del repo.
 - [ ] **F9 · Publicación.** `docs/`, sitio, `README`, push de ambas ramas.
