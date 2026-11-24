@@ -23,10 +23,9 @@ lo que de verdad se escribe en un microcontrolador a alta velocidad.
 | **04 Multipaso y rigidez** | catálogo | *nada*: se decide qué solver usar |
 | **05 Proyecto integrador** | motor de CD | se combinan las funciones anteriores |
 
-Cinco funciones en toda la unidad. Todo lo demás —trapecio, Simpson, Heun,
+Seis funciones en toda la unidad. Todo lo demás —trapecio, Simpson, Heun,
 RK4, Adams–Bashforth–Moulton, BDF, LSODA— se ve en su forma teórica, con su
 equivalente en `numpy`/`scipy` y en MATLAB, y con **cuándo usarlo y cuándo no**.
-
 ---
 
 ## 🧭 Cómo se recorre un cuaderno

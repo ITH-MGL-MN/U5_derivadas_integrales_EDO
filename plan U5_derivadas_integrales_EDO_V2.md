@@ -23,7 +23,7 @@ tres problemas de la v1:
    configurarlo después aunque hoy no lo implemente.
 3. **Programar solo lo sencillo**, lo que de verdad se escribe a mano en un
    microcontrolador: diferencias hacia atrás/centrada, reglas del rectángulo y
-   un paso de Euler. Cinco funciones en toda la unidad.
+   un paso de Euler. **Seis funciones** en toda la unidad.
 4. **Hacer a mano** esos mismos métodos con sus datos personales, porque el
    orden de error y el compromiso `h`-ruido se entienden con lápiz.
 5. **Cerrar con un caso de ingeniería personalizado** por cuaderno y con un
@@ -98,7 +98,7 @@ U5_derivadas_integrales_EDO_V2/
 ├── tools/                          # verificar.py, generar_figuras.py,
 │                                   # build_site.py, simular_colab.py,
 │                                   # revisar_cuadernos.py
-└── tests/                          # test_referencia.py (público)
+└── tests/test_privado.py           # pruebas del motor (rama test)
 ```
 
 `.gitignore` de `main`:
@@ -153,7 +153,8 @@ alumno lo necesita para trabajar, va en `main`.**
 
 ## 4. El contrato del motor — `privado/api.py`
 
-Diez funciones, todas de menos de 15 líneas, todas documentadas.
+Once funciones (diez renglones), todas de menos de 15 líneas, todas
+documentadas.
 
 | Función | Devuelve | Qué hace | Numeral |
 |---|---|---|---|
@@ -501,39 +502,55 @@ La celda 1.1 hace **una sola decisión**, con dos caminos explícitos:
 
 ```python
 # ¿Hay código legible? (tú, en local, con la rama test) -> úsalo: F12 y pdb sirven.
-# ¿No hay? (alumno en Colab) -> carga el blob de grader/ y sigue igual.
+# ¿No hay? (alumno en Colab) -> descomprime el paquete de grader/ y sigue igual.
 if os.path.isdir(os.path.join(RAIZ, "privado")):
     sys.path.insert(0, RAIZ)
-    from privado.api import *          # noqa: F403
     MODO = "local"
 else:
-    _src = zlib.decompress(base64.b64decode(
-        open(os.path.join(RAIZ, "grader", CUADERNO + ".txt")).read())).decode()
-    exec(compile(_src, "<grader " + CUADERNO + ">", "exec"), globals())
+    _dir = pathlib.Path(tempfile.mkdtemp(prefix="u5motor_"))
+    with zipfile.ZipFile(io.BytesIO(base64.b64decode(open(BLOB, "rb").read()))) as _zip:
+        _zip.extractall(_dir)
+    sys.path.insert(0, str(_dir))
     MODO = "blob"
+
+from privado.api import *          # noqa: F403  — igual en los dos modos
 ```
 
-En ambos modos quedan en el espacio de nombres las mismas diez funciones.
+En ambos modos quedan en el espacio de nombres las mismas once funciones y el
+paquete es **código normal**: `import privado.banco` funciona, los `.md` de las
+preguntas están en su carpeta y se pueden abrir. La celda imprime la ruta del
+temporal, para poder abrir los archivos a mano cuando algo falle.
 
-**Armado del blob** (`tools/build_grader.py`, rama `test`): concatena
-`privado/*.py` y `privado/preguntas/<cuaderno>/**` en un solo texto con cabecera
-`# ===== privado/referencia.py =====`; quita los `from privado.… import …`
-(auxiliares con prefijo de módulo: `_ref_`, `_cal_`, `_ide_`, `_cas_`);
-incrusta los `.md` como `RECURSOS`; escribe `base64(zlib.compress(texto, 9))`;
-verifica que compila, que `identificacion()` funciona, que un alumno perfecto
-saca 100 y que el round-trip descomprime igual. Ante fallo, celda de diagnóstico
-que vuelca `_src` a `_tmp_grader.py`.
+**Armado del paquete** (`tools/build_grader.py`, rama `test`):
+
+1. Empaqueta en un zip `privado/**/*.py`, `privado/preguntas/**/*.md`,
+   `config/config.yaml` y `config/privado.yaml`, más un `LEEME.txt` que explica
+   qué es el paquete.
+2. Escribe `base64(zip)` en una línea de `grader/<cuaderno>.txt`.
+3. Verifica antes de escribir: todo compila; `identificacion()` funciona; un
+   alumno perfecto saca 100; el zip trae los archivos esperados.
+
+> **Compromiso consciente:** el paquete lleva `config/privado.yaml`, así que un
+> alumno decidido puede leer el token. Es el mismo trato que hace U4, y el Apps
+> Script solo permite escribir en la hoja, no leerla. Si algún día molesta, se
+> quita del zip y `enviar()` queda en modo local.
+
+> **Por qué zip y no un texto plano concatenado:** con texto plano, `banco.py`
+> no podría importar las preguntas (no habría módulos), y habría que inventar
+> nombres `_q_...` para no chocar con las funciones del alumno. El zip conserva
+> módulos reales y elimina toda esa maquinaria.
 
 ---
 
 ## 16. Fases
 
-- [ ] **F0 · Esqueleto.** Carpetas, `.gitignore`, `requirements.txt`,
+- [x] **F0 · Esqueleto.** Carpetas, `.gitignore`, `requirements.txt`,
       `pyrightconfig.json`, `README.md`, ramas `main` y `test`.
-- [ ] **F1 · Contrato.** `privado/referencia.py` + `ESPECIFICACIONES` de las 5
-      funciones; `tests/test_referencia.py` contra los ejemplos del libro.
-- [ ] **F2 · Motor.** `privado/api.py`, `casos.py` y sus cinco módulos;
-      `tests/test_privado.py`.
+- [x] **F1 · Contrato.** `privado/referencia.py` + `ESPECIFICACIONES` de las 6
+      funciones; 23 pruebas contra los ejemplos 21.1, 23.1, 25.1 y 25.5.
+- [x] **F2 · Motor.** `privado/api.py`, `banco.py`, `califica.py`, `casos.py`
+      (cuaderno 01), `identidad.py`, `envio.py`, `ajustes.py`; 40 pruebas.
+      Pendiente de F2: los casos de los cuadernos 02–05.
 - [ ] **F3 · Catálogo.** `docs/guias/catalogo_metodos.md` con los 4 subtemas
       tipo B.
 - [ ] **F4 · Preguntas.** 15 preguntas (3 por cuaderno), `.md` + `.py`;
