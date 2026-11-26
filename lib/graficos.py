@@ -23,6 +23,13 @@ from __future__ import annotations
 import numpy as np
 import matplotlib.pyplot as plt
 
+try:
+    from pantalla import mostrar
+except ImportError:                     # fuera del repositorio, sin lib/ en la ruta
+    def mostrar(texto: str) -> None:
+        """Respaldo: imprime el texto tal cual."""
+        print(texto)
+
 __all__ = ["laboratorio"]
 
 # Ejemplo del libro (23.1). Se usa cuando el cuaderno no pasa otro.
@@ -156,11 +163,14 @@ def _lab_derivada_atras(datos: dict) -> dict:
     figura.tight_layout()
     plt.show()
 
-    print(f"  {datos['nombre']}")
-    print(f"  h = {h:.4f}: atrás = {atras:.6f}, centrada = {centrada:.6f}, "
-          f"exacta = {df_exacta[i0]:.6f}")
-    print(f"  Error máximo con {_MALLAS[-1]} intervalos: {errores[-1]:.3e}")
-    print(f"  Pendiente del error: {pendiente:.2f}  (1.0 = primer orden, 2.0 = segundo)")
+    mostrar(
+        f"**{datos['nombre']}**\n\n"
+        f"| Paso $h$ | Hacia atrás | Centrada | Exacta |\n|---|---|---|---|\n"
+        f"| {h:.4f} | {atras:.6f} | {centrada:.6f} | {df_exacta[i0]:.6f} |\n\n"
+        f"- Error máximo con {_MALLAS[-1]} intervalos: `{errores[-1]:.3e}`\n"
+        f"- Pendiente del error: **{pendiente:.2f}** "
+        f"(1.0 significa error $O(h)$, 2.0 significa $O(h^2)$)"
+    )
     return {"error_refinado": errores[-1], "pendiente": pendiente}
 
 
@@ -221,9 +231,14 @@ def _lab_derivada_centrada(datos: dict) -> dict:
     figura.tight_layout()
     plt.show()
 
-    print(f"  {datos['nombre']}")
-    print(f"  h = {h:.4f}: atrás = {atras:.6f}, centrada = {centrada:.6f}, "
-          f"exacta = {df_exacta[i0]:.6f}")
-    print(f"  Error máximo con {_MALLAS[-1]} intervalos: {errores_centrada[-1]:.3e}")
-    print(f"  Pendiente del error: {pendiente:.2f}  (1.0 = primer orden, 2.0 = segundo)")
+    mostrar(
+        f"**{datos['nombre']}**\n\n"
+        f"| Paso $h$ | Hacia atrás | Centrada | Exacta |\n|---|---|---|---|\n"
+        f"| {h:.4f} | {atras:.6f} | {centrada:.6f} | {df_exacta[i0]:.6f} |\n\n"
+        f"- Error máximo de la centrada con {_MALLAS[-1]} intervalos: "
+        f"`{errores_centrada[-1]:.3e}`\n"
+        f"- Error máximo de la de atrás, en la misma malla: `{errores_atras[-1]:.3e}`\n"
+        f"- Pendiente del error: **{pendiente:.2f}** "
+        f"(1.0 significa error $O(h)$, 2.0 significa $O(h^2)$)"
+    )
     return {"error_refinado": errores_centrada[-1], "pendiente": pendiente}

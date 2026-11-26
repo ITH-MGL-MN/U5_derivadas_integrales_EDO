@@ -119,7 +119,7 @@ def _raiz_local():
 def _carpeta_material():
     """Deja el material del curso en el Drive del alumno y devuelve su ruta.
 
-    Monta el Drive, actualiza los tres archivos que el cuaderno necesita y no
+    Monta el Drive, actualiza los archivos que el cuaderno necesita y no
     pide nada por teclado.
 
     Returns:
@@ -133,7 +133,8 @@ def _carpeta_material():
 
     drive.mount("/content/drive")
     base = Path("/content/drive/MyDrive") / CARPETA_MATERIAL
-    for relativa in ("lib/robomat.py", "lib/graficos.py", "grader/" + CUADERNO + ".txt"):
+    for relativa in ("lib/robomat.py", "lib/graficos.py", "lib/pantalla.py",
+                     "grader/" + CUADERNO + ".txt"):
         destino = base / relativa
         destino.parent.mkdir(parents=True, exist_ok=True)
         try:
@@ -239,13 +240,13 @@ def _preguntas_del_cierre():
 TITULO_01 = """
 # 📉 Cuaderno 01 · Derivación numérica y diferenciación en tiempo real
 
-Un encoder, una cámara, un termopar: todos entregan **muestras**, no derivadas.
-En este cuaderno vas a estimar $\\frac{\\mathrm{d}y}{\\mathrm{d}t}$ a partir de
-datos y a decidir **qué diferencia usar** según el ruido, el lazo de control y
-dónde está la muestra.
+Un encoder, una cámara, un termopar: todos entregan **muestras**, no funciones
+matemáticas derivables analíticamente. En este cuaderno vas a estimar
+$\\frac{\\mathrm{d}y}{\\mathrm{d}t}$ a partir de datos y a decidir **qué
+diferencia usar** según el ruido, el lazo de control y dónde está la muestra.
 
-> Las preguntas valen 20 puntos cada una y el caso 40. Las actividades a mano no
-> restan: son evidencia de que seguiste el procedimiento.
+> Las preguntas valen 20 puntos cada una y el caso vale 40. Las actividades a
+> mano no restan: son evidencia de que seguiste el procedimiento.
 """
 
 INTRO_01 = """
@@ -264,17 +265,23 @@ muestra de mañana, no puedo usarla en un lazo de control).
 
 ![Figura 23.4](@FIGURAS@fig23_4_temperatura.png)
 
-El libro mide la temperatura del suelo a 0, 1.25 y 3.75 cm de profundidad y
-obtiene 13.5, 12 y 10 °C. Para estimar $\\frac{\\mathrm{d}T}{\\mathrm{d}z}$ hay que dividir
-diferencias de temperatura entre diferencias de profundidad **que no son
-iguales**. Ese es el caso normal: los instrumentos no muestrean parejo.
+Un termómetro se usa para medir la temperatura del suelo a 0, 1.25 y 3.75 cm de
+profundidad y obtiene 13.5, 12 y 10 °C. Para estimar
+$\\frac{\\mathrm{d}T}{\\mathrm{d}z}$ hay que dividir diferencias de temperatura
+entre diferencias de profundidad **que no son iguales**. Ese es el caso normal:
+los instrumentos no muestrean parejo.
 
 *Qué muestra*: tres pares (profundidad, temperatura) sobre un eje vertical que
-crece hacia abajo. *Qué concluye*: la temperatura baja al profundizar, y con
-tres puntos desiguales la diferencia centrada se generaliza dividiendo entre el
-intervalo total. *Qué limitación tiene*: con tres puntos no hay forma de estimar
-el error sin suponer algo sobre la curvatura.
+crece hacia abajo.
 
+*Qué concluye*: la temperatura baja al profundizar, y con tres puntos desiguales
+la diferencia centrada se generaliza dividiendo entre el intervalo total.
+
+*Qué limitación tiene*: con tres puntos no hay forma de estimar el error sin
+suponer algo sobre la curvatura.
+"""
+
+RUIDO_01 = """
 ### Figura 23.5 · por qué el ruido es el enemigo
 
 Las dos imágenes siguientes son las dos mitades de la figura 23.5 del libro. En
@@ -287,10 +294,13 @@ zigzag.
 ![Figura 23.5, paneles b y d](@FIGURAS@fig23_5_ruido_2.png)
 
 *Qué muestra*: arriba los datos, abajo su derivada, en los dos casos.
+
 *Qué concluye*: un error pequeño en $y$ se convierte en un error grande en
-$\\mathrm{d}y/\\mathrm{d}x$. *Qué limitación tiene*: el método de diferencias no
-distingue entre una variación real y un error de medición; por eso antes de
-derivar hay que decidir si se filtra.
+$\\frac{\\mathrm{d}y}{\\mathrm{d}x}$.
+
+*Qué limitación tiene*: el método de diferencias no distingue entre una
+variación real y un error de medición; por eso antes de derivar hay que decidir
+si se filtra.
 
 | Si necesitas… | Usa | Porque |
 |---|---|---|
@@ -557,6 +567,7 @@ def cuaderno_01():
         _py(_entorno("u5_01_derivacion")),
         _py(CUENTA),
         _md(_rellena(INTRO_01)),
+        _md(_rellena(RUIDO_01)),
         _py("""
 #@title 🧪 2.2 · Pregunta 1
 pregunta(1)

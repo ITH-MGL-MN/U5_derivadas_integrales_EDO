@@ -76,7 +76,8 @@ U5_derivadas_integrales_EDO/
 │
 ├── lib/                            # material de consulta, solo lectura
 │   ├── robomat.py                  # base del curso (API intacta, copiada de U4)
-│   └── graficos.py                 # laboratorio(): una función por subtema
+│   ├── graficos.py                 # laboratorio(): una función por subtema
+│   └── pantalla.py                 # markdown y botones: lo que ve el alumno
 │
 ├── grader/                         # lo que el cuaderno carga en Colab
 │   ├── u5_01_derivacion.txt        # blob base64+zlib (§11)
@@ -128,21 +129,32 @@ se actualiza copiando rutas desde `test`. Nunca con `git merge test`, porque el
 merge arrastraría `privado/` y las respuestas — `.gitignore` no detiene a un
 archivo que ya está rastreado en la otra rama.
 
-Receta de publicación (solo cuando toque probar de verdad en Colab):
+Receta de publicación (solo cuando toque publicar o probar en Colab). Se hace
+**desde un clon temporal**, sin cambiar de rama en la carpeta de Drive: ese
+montaje falla al borrar directorios (ya pasó con `tools/` y con `docs/guias`), y
+un `git switch` deja el árbol a medias.
 
 ```powershell
-git switch main
-git checkout test -- notebooks lib docs site tools config/config.yaml `
-                     README.md "plan U5_derivadas_integrales_EDO.md" grader
-git commit -m "Publica U5 v2" -- notebooks lib docs site tools config/config.yaml `
-                                README.md "plan U5_derivadas_integrales_EDO.md" grader
-git switch test
+$src = "O:\Mi unidad\CursoMN\U5_derivadas_integrales_EDO"     # tu copia de trabajo
+$pub = Join-Path $env:TEMP "u5pub"
+git clone -q -b main https://github.com/ITH-MGL-MN/U5_derivadas_integrales_EDO.git $pub
+Copy-Item "$src\docs", "$src\notebooks", "$src\lib", "$src\site" $pub -Recurse -Force
+Copy-Item "$src\README.md", "$src\plan U5_derivadas_integrales_EDO.md" $pub
+Copy-Item "$src\config\config.yaml" "$pub\config"
+Copy-Item "$src\grader\*.txt" "$pub\grader"
+Copy-Item "$src\tools\verificar.py", "$src\tools\crear_cuadernos.py", `
+          "$src\tools\generar_figuras.py" "$pub\tools"
+cd $pub
+git add docs notebooks lib site config grader tools README.md "plan U5_derivadas_integrales_EDO.md"
+git commit -m "Publica U5 con el cuaderno NN"
+git push
 ```
 
 `grader/` entra en esa lista **después** de correr `tools/build_grader.py`
-(fase F8). Durante el desarrollo no se empaqueta nada: como `privado/` existe en
-el árbol, la celda 1.1 del cuaderno arranca en modo local, que es el modo en el
-que se depura con F12 y `pdb`.
+(fase F8). `tools/build_grader.py` y `privado/` **nunca** se copian. Durante el
+desarrollo no se empaqueta nada: como `privado/` existe en el árbol, la celda
+1.1 del cuaderno arranca en modo local, que es el modo en el que se depura con
+F12 y `pdb`.
 
 | Rama | Contiene | Cuándo se toca |
 |---|---|---|
@@ -496,6 +508,12 @@ síntomas → causa → qué cambiar.
 - `lib/graficos.py`: una función `lab_<clave>()` completa por subtema (puede
   repetir el armado de la figura) y un despachador `laboratorio(clave)` de
   cinco líneas. `lib/robomat.py` no se toca.
+- **Todo lo que se muestra pasa por `lib/pantalla.py`.** `mostrar(texto)` pinta
+  markdown —con LaTeX y tablas— y `elegir(cantidad, al_responder)` pone los
+  botones de opción. Nada que el alumno vea se imprime como texto plano: una
+  ecuación sin formatear se lee peor que mal, se lee mal.
+- Las preguntas usan botones numerados (o casillas si algún día hay preguntas de
+  varias respuestas). El alumno **nunca** escribe un número en un `input()`.
 - Español de México, decimales con punto, unidades explícitas.
 
 ---
