@@ -25,6 +25,8 @@ from pathlib import Path
 
 import nbformat as nbf
 
+from ocultar_celdas import marcar
+
 RAIZ = Path(__file__).resolve().parent.parent
 DESTINO = RAIZ / "notebooks"
 REPO = "ITH-MGL-MN/U5_derivadas_integrales_EDO"
@@ -677,6 +679,7 @@ pregunta(3)
     ]
     celdas.extend(_preguntas_del_cierre())
     cuaderno["cells"] = celdas
+    marcar(cuaderno)
     return cuaderno
 
 
@@ -1126,6 +1129,7 @@ pregunta(3)
     ]
     celdas.extend(_preguntas_del_cierre())
     cuaderno["cells"] = celdas
+    marcar(cuaderno)
     return cuaderno
 
 
