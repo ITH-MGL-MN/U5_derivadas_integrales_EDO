@@ -319,18 +319,21 @@ Con una malla de paso $h$, el libro escribe las tres primeras derivadas así:
 
 $$
 f'(x_i) \\approx \\frac{f(x_{i+1}) - f(x_i)}{h}
-\\qquad\\text{adelante, error } O(h)
 $$
+
+*Adelante, con error $O(h)$.*
 
 $$
 f'(x_i) \\approx \\frac{f(x_i) - f(x_{i-1})}{h}
-\\qquad\\text{atrás, error } O(h)
 $$
+
+*Atrás, con error $O(h)$.*
 
 $$
 f'(x_i) \\approx \\frac{f(x_{i+1}) - f(x_{i-1})}{2h}
-\\qquad\\text{centrada, error } O(h^2)
 $$
+
+*Centrada, con error $O(h^2)$.*
 
 La centrada gana un orden **gratis**: usa los mismos dos valores, solo que uno a
 cada lado. El precio es que hay que esperar la muestra siguiente, y que en el
@@ -723,9 +726,13 @@ Con muestras $(t_0, y_0), (t_1, y_1), \\dots$ y anchos $h_k = t_{k+1} - t_k$:
 
 $$
 I_{\\text{izq}} = \\sum_{k} y_k\\, h_k
-\\qquad
+$$
+
+$$
 I_{\\text{der}} = \\sum_{k} y_{k+1}\\, h_k
-\\qquad
+$$
+
+$$
 I_{\\text{med}} = \\sum_{k} \\frac{y_k + y_{k+1}}{2}\\, h_k
 $$
 
