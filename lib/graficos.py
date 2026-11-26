@@ -340,3 +340,222 @@ def _lab_filtrado(datos: dict) -> dict:
         "en los extremos.*"
     )
     return {"ventana": ventana, "error": error_elegida, "ventana_optima": optima}
+
+
+# ---------------------------------------------------------------------------
+# Cuaderno 02 · Integración numérica
+# ---------------------------------------------------------------------------
+
+
+def _integral_exacta(a: float, b: float) -> float:
+    """Integral de la función de prueba entre a y b.
+
+    La función es f(t) = 2 + 1.5t - 0.4t² + e^(-t) y su primitiva
+    S(t) = 2t + 0.75t² - 0.4t³/3 - e^(-t). Se eligió con un término
+    exponencial a propósito: así Simpson **no** es exacto y su orden se puede
+    medir en la gráfica (con un polinomio de grado dos daría error de máquina).
+
+    Args:
+        a: extremo inferior.
+        b: extremo superior.
+
+    Returns:
+        float: el valor exacto de la integral.
+    """
+    def primitiva(x):
+        return 2.0 * x + 0.75 * x**2 - 0.4 * x**3 / 3.0 - np.exp(-x)
+
+    return float(primitiva(b) - primitiva(a))
+
+
+def _senal_de_prueba(t: np.ndarray) -> np.ndarray:
+    """Valores de la función de prueba en los instantes dados."""
+    return 2.0 + 1.5 * t - 0.4 * t**2 + np.exp(-t)
+
+
+def _lab_rectangulos(datos: dict) -> dict:
+    """Laboratorio de las tres reglas del rectángulo sobre datos muestreados.
+
+    Tres paneles apilados:
+
+    1. la señal con los rectángulos de cada regla en una malla gruesa, para ver
+       dónde toma la altura cada una;
+    2. la integral acumulada de las tres contra la exacta: la de la derecha se
+       despega, la de la izquierda también, y la del punto medio se pega;
+    3. el error total contra el número de intervalos en escala logarítmica, con
+       la pendiente de cada regla.
+
+    Args:
+        datos: `a`, `b` y `n` (intervalos de la malla gruesa; 8 por omisión).
+
+    Returns:
+        dict: `{"error_izquierda", "error_derecha", "error_punto_medio"}` en la
+        malla fina.
+    """
+    a = float(datos.get("a", 0.0))
+    b = float(datos.get("b", 2.0))
+    n = int(datos.get("n", 8))
+
+    t = np.linspace(a, b, n + 1)
+    y = _senal_de_prueba(t)
+    h = t[1] - t[0]
+
+    figura, (eje1, eje2, eje3) = plt.subplots(3, 1, figsize=(6.5, 11))
+
+    eje1.plot(t, y, "ko-", ms=4, lw=1, label="muestras", zorder=5)
+    for indice in range(n):
+        eje1.add_patch(plt.Rectangle((t[indice], 0), h, y[indice],
+                                     facecolor="tab:blue", alpha=0.18, edgecolor="none"))
+        eje1.plot([t[indice + 1], t[indice + 1]], [0, y[indice]], color="tab:red",
+                  lw=0.8, alpha=0.5)
+    eje1.axhline(0, color="k", lw=0.6)
+    _estilo(eje1, f"1) Altura de cada rectángulo: izquierda (azul) y derecha (rojo), n = {n}",
+            "t", "f(t)")
+    eje1.legend(fontsize=8, loc="upper right")
+
+    malla = np.linspace(a, b, 401)
+    exacta_acumulada = np.array([_integral_exacta(a, x) for x in malla])
+    izquierda_acumulada = np.concatenate(([0.0], np.cumsum(y[:-1] * h)))
+    derecha_acumulada = np.concatenate(([0.0], np.cumsum(y[1:] * h)))
+    medio_acumulada = np.concatenate(([0.0], np.cumsum(0.5 * (y[:-1] + y[1:]) * h)))
+
+    eje2.plot(malla, exacta_acumulada, "k-", lw=2, label="exacta")
+    eje2.plot(t, izquierda_acumulada, "b--o", ms=3, label="izquierda")
+    eje2.plot(t, derecha_acumulada, "r--s", ms=3, label="derecha")
+    eje2.plot(t, medio_acumulada, "g-.^", ms=3, label="punto medio")
+    _estilo(eje2, "2) Integral acumulada: cada regla se despega a su manera",
+            "t", "integral de a hasta t")
+    eje2.legend(fontsize=8, loc="upper left")
+
+    mallas = (4, 8, 16, 32, 64, 128, 256)
+    errores = {"izquierda": [], "derecha": [], "punto medio": []}
+    for pasos in mallas:
+        ts = np.linspace(a, b, pasos + 1)
+        ys = _senal_de_prueba(ts)
+        ancho = ts[1] - ts[0]
+        exacto = _integral_exacta(a, b)
+        errores["izquierda"].append(abs(float(np.sum(ys[:-1] * ancho)) - exacto))
+        errores["derecha"].append(abs(float(np.sum(ys[1:] * ancho)) - exacto))
+        errores["punto medio"].append(abs(float(np.sum(0.5 * (ys[:-1] + ys[1:]) * ancho)) - exacto))
+
+    for nombre, color, marca in (("izquierda", "tab:blue", "o"),
+                                 ("derecha", "tab:red", "s"),
+                                 ("punto medio", "tab:green", "^")):
+        pendiente = _pendiente(np.array(mallas, dtype=float), np.array(errores[nombre]))
+        eje3.loglog(mallas, errores[nombre], marca + "-", color=color, ms=3,
+                    label=f"{nombre} (pendiente ≈ {pendiente:.2f})")
+    eje3.loglog(mallas, np.array(errores["izquierda"])[0] * (np.array(mallas, dtype=float) ** -1),
+                "k:", lw=1, label="referencia O(h)")
+    _estilo(eje3, "3) Error total al refinar", "número de intervalos", "error absoluto")
+    eje3.legend(fontsize=8, loc="lower left")
+
+    figura.tight_layout()
+    plt.show()
+
+    mostrar(
+        f"**Integral exacta** entre {a:g} y {b:g}: `{_integral_exacta(a, b):.6f}`\n\n"
+        "| Regla | Integral | Error |\n|---|---|---|\n"
+        f"| izquierda | {float(np.sum(y[:-1] * h)):.6f} | {errores['izquierda'][-1]:.3e} |\n"
+        f"| derecha | {float(np.sum(y[1:] * h)):.6f} | {errores['derecha'][-1]:.3e} |\n"
+        f"| punto medio | {float(np.sum(0.5 * (y[:-1] + y[1:]) * h)):.6f} | {errores['punto medio'][-1]:.3e} |\n\n"
+        "*Con datos muestreados, el punto medio necesita el valor en el centro del "
+        "intervalo, que no existe: por eso se promedia los extremos y el resultado "
+        "coincide con el trapecio. Con la función a mano sí se evalúa el centro.*"
+    )
+    return {"error_izquierda": errores["izquierda"][-1],
+            "error_derecha": errores["derecha"][-1],
+            "error_punto_medio": errores["punto medio"][-1]}
+
+
+def _lab_trapecio_simpson(datos: dict) -> dict:
+    """Laboratorio del trapecio y de Simpson sobre una función conocida.
+
+    Tres paneles apilados:
+
+    1. el área que sombrea el trapecio con pocos intervalos y la curva real;
+    2. el área que sombrea Simpson 1/3 con los mismos intervalos;
+    3. el error de los dos contra el número de intervalos, con la pendiente de
+       cada método (2 para el trapecio, 4 para Simpson).
+
+    Args:
+        datos: `a`, `b` y `n` (intervalos; debe ser par para Simpson, 8 por
+            omisión).
+
+    Returns:
+        dict: `{"error_trapecio", "error_simpson"}` en la malla más fina.
+    """
+    a = float(datos.get("a", 0.0))
+    b = float(datos.get("b", 2.0))
+    n = int(datos.get("n", 8))
+    if n % 2:
+        n += 1
+
+    t = np.linspace(a, b, n + 1)
+    y = _senal_de_prueba(t)
+    fina = np.linspace(a, b, 400)
+
+    figura, (eje1, eje2, eje3) = plt.subplots(3, 1, figsize=(6.5, 11))
+
+    eje1.plot(fina, _senal_de_prueba(fina), "k-", lw=2, label="f(t)")
+    eje1.plot(t, y, "o", color="tab:blue", ms=4, label="nodos")
+    for indice in range(n):
+        eje1.add_patch(plt.Polygon([[t[indice], 0], [t[indice], y[indice]],
+                                    [t[indice + 1], y[indice + 1]], [t[indice + 1], 0]],
+                                   closed=True, facecolor="tab:blue", alpha=0.25,
+                                   edgecolor="none"))
+    eje1.axhline(0, color="k", lw=0.6)
+    _estilo(eje1, f"1) Trapecio con n = {n}: une los nodos con rectas", "t", "f(t)")
+    eje1.legend(fontsize=8, loc="upper right")
+
+    eje2.plot(fina, _senal_de_prueba(fina), "k-", lw=2, label="f(t)")
+    eje2.plot(t, y, "o", color="tab:green", ms=4, label="nodos")
+    for inicio in range(0, n, 2):
+        xs = t[inicio:inicio + 3]
+        if xs.size < 3:
+            break
+        coeficientes = np.polyfit(xs, _senal_de_prueba(xs), 2)
+        tramo = np.linspace(xs[0], xs[-1], 40)
+        eje2.fill_between(tramo, 0, np.polyval(coeficientes, tramo),
+                          color="tab:green", alpha=0.25)
+        eje2.plot(tramo, np.polyval(coeficientes, tramo), color="tab:green", lw=1.5)
+    eje2.axhline(0, color="k", lw=0.6)
+    _estilo(eje2, f"2) Simpson 1/3 con los mismos nodos: une de tres en tres con parábolas",
+            "t", "f(t)")
+    eje2.legend(fontsize=8, loc="upper right")
+
+    mallas = (2, 4, 8, 16, 32, 64, 128)
+    errores_trapecio, errores_simpson = [], []
+    exacto = _integral_exacta(a, b)
+    from scipy.integrate import simpson
+
+    for pasos in mallas:
+        ts = np.linspace(a, b, pasos + 1)
+        ys = _senal_de_prueba(ts)
+        errores_trapecio.append(abs(float(np.trapezoid(ys, ts)) - exacto))
+        errores_simpson.append(abs(float(simpson(ys, x=ts)) - exacto))
+
+    integral_trapecio = float(np.trapezoid(y, t))
+    integral_simpson = float(simpson(y, x=t))
+
+    pendiente_t = _pendiente(np.array(mallas, dtype=float), np.array(errores_trapecio))
+    pendiente_s = _pendiente(np.array(mallas, dtype=float), np.array(errores_simpson))
+    eje3.loglog(mallas, errores_trapecio, "bo-", ms=3,
+                label=f"trapecio (pendiente ≈ {pendiente_t:.2f})")
+    eje3.loglog(mallas, errores_simpson, "g^-", ms=3,
+                label=f"Simpson (pendiente ≈ {pendiente_s:.2f})")
+    _estilo(eje3, "3) Error al refinar: la diferencia entre los dos órdenes",
+            "número de intervalos", "error absoluto")
+    eje3.legend(fontsize=8, loc="lower left")
+
+    figura.tight_layout()
+    plt.show()
+
+    mostrar(
+        f"**Integral exacta** entre {a:g} y {b:g}: `{exacto:.6f}`\n\n"
+        "| Método | Integral | Error |\n|---|---|---|\n"
+        f"| trapecio | {integral_trapecio:.6f} | {errores_trapecio[-1]:.3e} |\n"
+        f"| Simpson 1/3 | {integral_simpson:.6f} | {errores_simpson[-1]:.3e} |\n\n"
+        "Al duplicar los intervalos, el trapecio divide su error entre 4 y Simpson "
+        "entre 16: ese es el efecto de ganar dos órdenes."
+    )
+    return {"error_trapecio": errores_trapecio[-1], "error_simpson": errores_simpson[-1]}

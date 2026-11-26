@@ -666,8 +666,417 @@ pregunta(3)
     return cuaderno
 
 
+# ---------------------------------------------------------------------------
+# Cuaderno 02 · Integración numérica
+# ---------------------------------------------------------------------------
+
+TITULO_02 = """
+# 📈 Cuaderno 02 · Integración numérica e integradores en tiempo real
+
+Un sensor de corriente, un caudalímetro, un encoder: todos entregan muestras de
+una **tasa**. Integrarlas da el total que sí interesa: carga consumida, agua
+servida, distancia recorrida. En este cuaderno vas a integrar datos y a decidir
+**qué regla usar** según el paso, el ruido y si estás dentro de un lazo.
+
+> Las preguntas valen 20 puntos cada una y el caso vale 40. Las actividades a
+> mano no restan: son evidencia de que seguiste el procedimiento.
+"""
+
+INTRO_02 = """
+## 2.1 · De sumar rectángulos a Newton–Cotes
+
+Integrar con datos es sumar áreas. La diferencia entre un método y otro está en
+**cómo se rellena el hueco entre dos muestras**: con un rectángulo, con un
+trapecio o con una parábola. Todo el capítulo 21 del libro es esa idea, y cada
+relleno distinto compra un orden de error.
+
+### Figura 21.4 · el trapecio
+
+![Figura 21.4](@FIGURAS@fig21_4_trapecio.png)
+
+La curva se cambia por la recta que une sus dos extremos: el área sombreada es
+el trapecio que se usa como estimación. La franja entre la recta y la curva es
+exactamente el error que se comete.
+
+*Qué muestra*: la función, sus dos extremos y el trapecio que los une.
+
+*Qué concluye*: si la curva es cóncava, el trapecio queda por encima y
+sobreestima; si es convexa, subestima. El error depende de la curvatura, no del
+valor.
+
+*Qué limitación tiene*: con un solo trapecio el error es enorme; su gracia
+aparece al repetirlo en muchos intervalos.
+
+### Las tres formas de tomar la altura
+
+Antes del trapecio está la regla del rectángulo, que es la que de verdad se
+programa en un microcontrolador. Su altura puede ser el valor de la izquierda,
+el de la derecha o el del centro del intervalo. Las tres son de primer orden,
+pero no cometen el mismo error: una se queda corta, otra se pasa y la tercera
+reparte el error a partes iguales.
+"""
+
+TEORIA_02 = """
+## 3.1 · Las reglas del rectángulo
+
+Con muestras $(t_0, y_0), (t_1, y_1), \\dots$ y anchos $h_k = t_{k+1} - t_k$:
+
+$$
+I_{\\text{izq}} = \\sum_{k} y_k\\, h_k
+\\qquad
+I_{\\text{der}} = \\sum_{k} y_{k+1}\\, h_k
+\\qquad
+I_{\\text{med}} = \\sum_{k} \\frac{y_k + y_{k+1}}{2}\\, h_k
+$$
+
+Las tres son de primer orden, pero se equivocan hacia lados distintos:
+
+- **izquierda** subestima si la señal crece y sobreestima si decrece;
+- **derecha** hace lo contrario: es la **causal**, porque en el instante $k+1$
+  solo se conoce $y_{k+1}$, y por eso es la que corre en un lazo;
+- **punto medio** promedia los extremos. Con la función a mano se evalúa el
+  centro del intervalo y se gana un orden; con muestras no hay centro que
+  evaluar, así que promediar es lo único posible.
+
+En un microcontrolador se escribe como un acumulador, una línea por muestra:
+
+```python
+carga += corriente[k] * dt      # regla de la izquierda, dentro del lazo
+```
+
+### Por qué el trapecio es distinto
+
+El trapecio es exactamente el promedio de las reglas de izquierda y derecha:
+
+$$
+I_{\\text{trap}} = \\sum_k \\frac{y_k + y_{k+1}}{2}\\, h_k
+$$
+
+Con datos muestreados coincide con la regla del punto medio, y esa coincidencia
+es la que te va a aparecer en el laboratorio. Con la función disponible, en
+cambio, el punto medio evalúa $f$ en el centro y es mejor.
+"""
+
+CONTRATO_02 = """
+### 3.3 · Programa las tres reglas
+
+Completa las tres funciones de la celda siguiente **sin cambiar sus nombres ni
+sus parámetros**. Después ejecútalas con `practica(...)`: cada una se compara
+con la referencia en dos casos del ejemplo 21.1 del libro y en tu caso sembrado
+con tu número de control.
+
+- **Entra**: `t` (instantes) e `y` (muestras), del mismo tamaño.
+- **Sale**: un `float` con la integral.
+- **Ojo**: los intervalos **no** son iguales. No uses un `h` único: usa el ancho
+  de cada intervalo.
+
+<details><summary>Pista 1 · dónde están en el libro</summary>
+
+No tienen número de ecuación: son las reglas que se usan en un lazo de tiempo
+real. El trapecio del libro es la ecuación (21.9) y es, literalmente, el
+promedio de las dos primeras.
+
+</details>
+
+<details><summary>Pista 2 · qué forma tienen las respuestas</summary>
+
+Un acumulador que recorre los intervalos. En cada uno, multiplica una altura por
+su ancho: `y[k]` para la izquierda, `y[k+1]` para la derecha y el promedio de
+los dos para el punto medio.
+
+</details>
+
+<details><summary>Pista 3 · qué propiedad del problema mirar</summary>
+
+Si la señal es constante, las tres deben dar exactamente lo mismo: el valor por
+el tiempo total. Si alguna falla ese caso, el error está en los índices.
+
+</details>
+"""
+
+OBSERVA_02 = """
+### 3.4 · Qué observar en el laboratorio
+
+Los tres paneles responden tres preguntas distintas:
+
+1. **¿Dónde toma la altura cada regla?** Los rectángulos azules usan el valor de
+   la izquierda; la línea roja marca la altura que usaría la derecha. Con pocos
+   intervalos, el hueco entre la recta y la curva es el error.
+2. **¿Cómo se acumula el error?** La integral acumulada de la derecha se separa
+   de la exacta y ya no vuelve: el sesgo se suma en cada intervalo. La del punto
+   medio se mantiene pegada.
+3. **¿Cuánto mejora al refinar?** En escala logarítmica, la pendiente del error
+   es 1 para las tres: todas son de primer orden. Que la pendiente sea la misma
+   no significa que cometan el mismo error, sino que **mejoran al mismo ritmo**.
+
+> **Lo importante del panel 2.** La regla de la derecha no es "un poco peor":
+> su error tiene el mismo signo en todos los intervalos y se acumula. En una
+> batería eso es carga que se pierde de la cuenta, no ruido.
+"""
+
+CATALOGO_02 = """
+## 4.1 · Lo que no se programa, pero sí se elige
+
+Ya tienes las tres reglas. Los métodos de Newton–Cotes del capítulo 21 no se
+escriben a mano en este curso: se configuran. Lo que hay que saber es cuál pedir.
+
+- **Trapecio múltiple** (ecuación 21.9). Repite el trapecio en cada intervalo:
+  error de segundo orden y funciona con paso irregular, porque cada intervalo
+  usa su propio ancho (ecuación 21.22). Es la opción por defecto con datos.
+- **Simpson 1/3** (ecuación 21.14). Cambia cada dos intervalos por una parábola:
+  sube a cuarto orden **sin evaluar nada nuevo**, pero exige número par de
+  intervalos y separación uniforme.
+- **Simpson 3/8** (ecuación 21.20). Usa tres intervalos por parábola cúbica. Su
+  razón de existir es cubrir un tramo final cuando el número de intervalos no es
+  múltiplo de dos.
+- **Cuadratura adaptativa.** Cuando tienes la **función** y no las muestras, el
+  integrador elige los puntos y controla el error. Es otro problema: aquí no hay
+  muestras que respetar.
+
+### Figura 21.12 · combinar 1/3 con 3/8
+
+![Figura 21.12](@FIGURAS@fig21_12_simpson_combinado.png)
+
+La curva es unimodal y asimétrica. El tramo de la izquierda se integra con
+Simpson 1/3 y el de la derecha con Simpson 3/8.
+
+*Qué muestra*: dos reglas distintas cubriendo tramos contiguos del mismo
+intervalo.
+
+*Qué concluye*: cuando el número de intervalos no es par, no hay que tirar un
+segmento ni bajar a trapecio: se cubre el final con la regla de tres octavos y
+todo el intervalo queda con el mismo orden de error.
+
+*Qué limitación tiene*: hay que llevar la cuenta de dónde empieza cada regla, y
+por eso en la práctica se prefiere ajustar la malla para que sea par.
+
+## 4.2 · Cómo se llaman en Python y en MATLAB
+
+| Necesitas | Python | MATLAB |
+|---|---|---|
+| Trapecio | `np.trapezoid(y, t)` | `trapz(t, y)` |
+| Trapecio acumulado | `scipy.integrate.cumulative_trapezoid` | `cumtrapz` |
+| Simpson | `scipy.integrate.simpson(y, x=t)` | se compone con `trapz` o `integral` |
+| Cuadratura adaptativa | `scipy.integrate.quad(f, a, b)` | `integral(@f, a, b)` |
+
+**Cuándo sí y cuándo no.** `np.trapezoid` acepta `t` irregular y nunca falla:
+es la apuesta segura con datos. `simpson` exige paso uniforme; si le pasas un
+`t` irregular interpola por dentro y te devuelve un número que **parece** bueno.
+`quad` necesita la función, así que no sirve para registros de un sensor.
+`cumulative_trapezoid` es el que quieres cuando te interesa el valor en cada
+instante y no solo el total.
+"""
+
+CONFIGURA_02 = '''
+#@title 🔧 4.3 · Configúralo tú (no lo programes)
+# Cambia N y vuelve a ejecutar. El laboratorio compara trapecio y Simpson sobre
+# la misma función y muestra cómo cae el error de cada uno al refinar.
+N = 8                # intervalos (Simpson necesita un número par)
+COMPARACION = laboratorio("trapecio_simpson", {"n": N})
+'''
+
+OBSERVA_SIMPSON_02 = """
+### 4.4 · Qué observar en el laboratorio de trapecio y Simpson
+
+1. **El panel 1** une los nodos con rectas: eso es el trapecio. Con ocho
+   intervalos la diferencia con la curva todavía se nota.
+2. **El panel 2** une los nodos de tres en tres con parábolas: eso es Simpson.
+   Con los **mismos** nodos, el área se pega mucho mejor a la curva.
+3. **El panel 3** es la prueba del orden. El trapecio baja con pendiente 2 y
+   Simpson con pendiente 4: al duplicar los intervalos, el primero divide su
+   error entre 4 y el segundo entre 16.
+
+Esa es la razón por la que Simpson, cuando el paso es uniforme, es la mejor
+compra: cuesta lo mismo que el trapecio y gana dos órdenes. El precio es la
+condición: **número par de intervalos e igual separación entre nodos**.
+"""
+
+CASO_02 = """
+## 5.1 · Caso de ingeniería: estado de carga de una batería
+
+Un paquete de baterías alimenta un robot. El bus CAN informa la corriente cada
+cierto tiempo, **sin periodicidad**: hay ráfagas de datos rápidos y huecos
+largos. Con esa corriente hay que estimar cuánta carga se consumió y en qué
+estado de carga quedó la batería.
+
+Ejecuta la celda siguiente: te da **tus** datos (capacidad, estado inicial,
+muestras y picos de corriente) y la lista de métodos admitidos con lo que vale
+cada uno. Elige tú.
+
+<details><summary>Pista 1 · por dónde empezar</summary>
+
+La carga es la integral de la corriente: cada amperio durante un segundo es un
+coulomb. Para pasar a amperios-hora hay que dividir entre 3600.
+
+</details>
+
+<details><summary>Pista 2 · qué forma tiene la respuesta</summary>
+
+Un solo número, el estado de carga final en porcentaje, dentro de un
+diccionario con la clave `"soc_final"`.
+
+</details>
+
+<details><summary>Pista 3 · qué propiedad del problema mirar</summary>
+
+Mira la separación entre muestras antes de elegir la regla. Si no es constante,
+hay reglas de Newton–Cotes que dejan de ser válidas tal como están escritas.
+
+</details>
+"""
+
+ESQUELETO_02 = """
+### 5.1.1 · Tu solución
+
+Completa los dos huecos. El ancho de cada intervalo y las muestras ya están
+listos; lo que falta es **tu** elección de regla.
+"""
+
+CODIGO_CASO_02 = '''
+#@title 🛠️ 5.1.1 · Solución del caso
+import numpy as np
+
+DATOS = CASO["datos"]
+t = DATOS["t"]
+corriente = DATOS["corriente"]
+
+ANCHOS = np.diff(t)          # ancho de cada intervalo, en segundos
+
+# Paso 1: carga consumida, en amperios-hora. Un amperio durante un segundo
+#         es un coulomb, y 3600 coulombs son un amperio-hora.
+carga_Ah = ____
+
+# Paso 2: estado de carga final, en porcentaje.
+soc_final = ____
+
+print(f"Carga consumida: {carga_Ah:.4f} Ah")
+print(f"Estado de carga final: {soc_final:.4f} %")
+'''
+
+REVISA_02 = '''
+#@title ✅ 5.1.2 · Revisar el caso
+# Declara el método que usaste y entrega tu número.
+VEREDICTO = caso_revisar(metodo="trapecio_irregular", resultados={"soc_final": soc_final})
+'''
+
+CIERRE_MD_02 = """
+## 6 · Cierre
+
+`calificar()` suma tus tres preguntas y el caso, y normaliza a 100. El resultado
+queda en `NOTA` y `TOPE`, por si quieres consultarlo después.
+
+`enviar()` manda el resultado al backend del curso y `consultar_calificacion()`
+te dice lo que quedó guardado. Sin conexión, `enviar()` avisa y no falla.
+
+Si te quedó duda de algún método que no programaste, la
+[guía de integración](@DOCS@guias/catalogo_02_integracion.md) tiene la tabla de
+decisión y los nombres en Python y en MATLAB.
+"""
+
+
+def cuaderno_02():
+    """Arma el cuaderno U5_02 completo."""
+    cuaderno = _nuevo("Integración numérica")
+    celdas = [
+        _md(_rellena(TITULO_02)),
+        _py(_entorno("u5_02_integracion")),
+        _py(CUENTA),
+        _md(_rellena(INTRO_02)),
+        _py("""
+#@title 🧪 2.2 · Pregunta 1
+pregunta(1)
+"""),
+        _md(TEORIA_02),
+        _py("""
+#@title ✍️ 3.2 · Tu ejercicio a mano
+MANO = mano_enunciado("integral_derecha")
+"""),
+        _py("""
+#@title ✍️ 3.2 · Comprueba tu resultado
+# Escribe aquí el número que calculaste (con 4 decimales).
+ACIERTO = mano_comprueba("integral_derecha", 0.0)
+"""),
+        _md(CONTRATO_02),
+        _py('''
+#@title 💻 3.3 · Programa las tres reglas
+def integral_izquierda(t, y):
+    """Integral por la regla del rectángulo con el valor de la izquierda.
+
+    Args:
+        t: instantes de las muestras, crecientes.
+        y: muestras, misma longitud que t.
+
+    Returns:
+        float: la integral aproximada.
+    """
+    raise NotImplementedError("Escribe aquí tu regla de la izquierda")
+
+
+def integral_derecha(t, y):
+    """Integral por la regla del rectángulo con el valor de la derecha.
+
+    Args:
+        t: instantes de las muestras, crecientes.
+        y: muestras, misma longitud que t.
+
+    Returns:
+        float: la integral aproximada.
+    """
+    raise NotImplementedError("Escribe aquí tu regla de la derecha")
+
+
+def integral_punto_medio(t, y):
+    """Integral por la regla del punto medio sobre datos muestreados.
+
+    Args:
+        t: instantes de las muestras, crecientes.
+        y: muestras, misma longitud que t.
+
+    Returns:
+        float: la integral aproximada.
+    """
+    raise NotImplementedError("Escribe aquí tu regla del punto medio")
+'''),
+        _py("""
+#@title ▶️ 3.3 · Compáralas con la referencia
+APROBADA_IZQUIERDA = practica(integral_izquierda)
+APROBADA_DERECHA = practica(integral_derecha)
+APROBADA_MEDIO = practica(integral_punto_medio)
+"""),
+        _py("""
+#@title 📊 3.4 · Laboratorio
+laboratorio("rectangulos")
+"""),
+        _md(OBSERVA_02),
+        _py("""
+#@title 🧪 3.5 · Pregunta 2
+pregunta(2)
+"""),
+        _md(_rellena(CATALOGO_02)),
+        _py(CONFIGURA_02),
+        _md(OBSERVA_SIMPSON_02),
+        _md(CASO_02),
+        _py("""
+#@title 🏭 5.1 · Tus datos y los métodos admitidos
+CASO = caso()
+"""),
+        _md(ESQUELETO_02),
+        _py(CODIGO_CASO_02),
+        _py(REVISA_02),
+        _py("""
+#@title 🧪 5.1.3 · Pregunta 3
+pregunta(3)
+"""),
+        _md(_rellena(CIERRE_MD_02)),
+    ]
+    celdas.extend(_preguntas_del_cierre())
+    cuaderno["cells"] = celdas
+    return cuaderno
+
+
 CUADERNOS = {
     "01": ("U5_01_Derivacion_Numerica.ipynb", cuaderno_01),
+    "02": ("U5_02_Integracion_Numerica.ipynb", cuaderno_02),
 }
 
 
