@@ -51,13 +51,17 @@ def laboratorio(clave: str, ejemplo: dict | None = None) -> dict:
 
     Args:
         clave: nombre del método; debe existir la función `_lab_<clave>`.
-        ejemplo: diccionario con `f`, `df`, `a`, `b`, `n` y, si se quiere,
-            `x0` y `nombre`. Si se omite, se usa el ejemplo 23.1 del libro.
+        ejemplo: diccionario con los datos del caso. Para los métodos de
+            diferencias se usan `f`, `df`, `a`, `b`, `n`, `x0` y `nombre`; para
+            `"filtrado"` se usan `ventana` (muestras de la media móvil) y
+            `ruido` (desviación estándar del sensor). Si se omite, se usa el
+            ejemplo 23.1 del libro.
 
     Returns:
-        dict: `{"error_refinado": ..., "pendiente": ...}` con el error máximo
-        en la malla más fina y la pendiente ajustada de la gráfica log-log
-        (1.0 para un método de primer orden, 2.0 para uno de segundo).
+        dict: según el laboratorio; los de diferencias devuelven
+        `{"error_refinado": ..., "pendiente": ...}` con el error máximo en la
+        malla más fina y la pendiente ajustada de la gráfica log-log (1.0 para
+        un método de primer orden, 2.0 para uno de segundo).
 
     Raises:
         KeyError: si `clave` no tiene laboratorio.
@@ -242,3 +246,97 @@ def _lab_derivada_centrada(datos: dict) -> dict:
         f"(1.0 significa error $O(h)$, 2.0 significa $O(h^2)$)"
     )
     return {"error_refinado": errores_centrada[-1], "pendiente": pendiente}
+
+
+def _lab_filtrado(datos: dict) -> dict:
+    """Laboratorio del filtrado antes de derivar (subtema 4.x del cuaderno 01).
+
+    Tres paneles apilados para leer en el teléfono:
+
+    1. la señal medida (con ruido) y la misma señal después de la media móvil;
+    2. la derivada sin filtrar, la derivada de la señal filtrada y la derivada
+       exacta del seno, que es lo que se quiere recuperar;
+    3. el error de la derivada contra el ancho de la ventana, donde se ve que
+       filtrar de más también arruina la estimación.
+
+    Args:
+        datos: además de las claves comunes, `ventana` (muestras de la media
+            móvil; 7 por omisión) y `ruido` (desviación estándar; 0.02 por
+            omisión). La señal es un seno de 1 Hz con su tercer armónico, medida
+            a 200 muestras por segundo, como un lazo de control.
+
+    Returns:
+        dict: `{"ventana", "error", "ventana_optima"}` con el error medio de la
+        derivada en la ventana elegida y la ventana que lo minimiza.
+    """
+    ventana = int(datos.get("ventana", 7))
+    ruido = float(datos.get("ruido", 0.02))
+    frecuencia = 1.0
+    muestreo = 200.0
+    armonico = 0.3
+
+    t = np.arange(0.0, 2.0, 1.0 / muestreo)
+    limpia = (np.sin(2.0 * np.pi * frecuencia * t)
+              + armonico * np.sin(2.0 * np.pi * 3.0 * frecuencia * t))
+    generador = np.random.default_rng(7)
+    medida = limpia + generador.normal(0.0, ruido, t.size)
+
+    exacta = (2.0 * np.pi * frecuencia * np.cos(2.0 * np.pi * frecuencia * t)
+              + armonico * 6.0 * np.pi * frecuencia * np.cos(2.0 * np.pi * 3.0 * frecuencia * t))
+    suave = np.convolve(medida, np.ones(ventana) / ventana, mode="same")
+    derivada_cruda = np.gradient(medida, t)
+    derivada_suave = np.gradient(suave, t)
+
+    figura, (eje1, eje2, eje3) = plt.subplots(3, 1, figsize=(6.5, 11))
+
+    eje1.plot(t, medida, color="0.7", lw=0.9, label="señal medida (con ruido)")
+    eje1.plot(t, suave, "b-", lw=2, label=f"media móvil de {ventana} muestras")
+    eje1.plot(t, limpia, "k--", lw=1, label="señal real")
+    _estilo(eje1, f"1) La señal y su suavizado (ruido σ = {ruido})", "tiempo (s)", "posición")
+    eje1.legend(fontsize=8, loc="upper right")
+
+    tope = 2.5 * float(np.max(np.abs(exacta)))
+    eje2.plot(t, derivada_cruda, color="0.75", lw=0.8, label="derivada sin filtrar")
+    eje2.plot(t, derivada_suave, "b-", lw=2, label="derivada de la señal filtrada")
+    eje2.plot(t, exacta, "k--", lw=1.5, label="derivada exacta")
+    eje2.set_ylim(-tope, tope)
+    _estilo(eje2, "2) La derivada: el ruido se multiplica", "tiempo (s)", "velocidad")
+    eje2.legend(fontsize=8, loc="upper right")
+
+    ventanas = np.arange(1, 62, 2)
+    errores = []
+    for ancho in ventanas:
+        filtrada = np.convolve(medida, np.ones(ancho) / ancho, mode="same")
+        aproximada = np.gradient(filtrada, t)
+        interior = slice(ancho, -ancho)
+        errores.append(float(np.mean(np.abs(aproximada[interior] - exacta[interior]))))
+    errores = np.array(errores)
+    optima = int(ventanas[int(np.argmin(errores))])
+
+    eje3.semilogy(ventanas, errores, "o-", color="tab:green", ms=3)
+    eje3.axvline(ventana, color="tab:blue", ls="--", lw=1.2,
+                 label=f"tu ventana: {ventana}")
+    eje3.axvline(optima, color="tab:red", ls=":", lw=1.2,
+                 label=f"la mejor: {optima}")
+    _estilo(eje3, "3) Error de la derivada según el ancho de la ventana",
+            "muestras de la media móvil", "error medio")
+    eje3.legend(fontsize=8)
+
+    figura.tight_layout()
+    plt.show()
+
+    error_elegida = errores[int(np.argmin(np.abs(ventanas - ventana)))]
+    mostrar(
+        f"**Ventana elegida:** {ventana} muestras · "
+        f"error medio de la derivada `{error_elegida:.4f}`\n\n"
+        f"**Sin filtrar** (ventana de 1 muestra) el error medio es "
+        f"`{errores[0]:.4f}`: la derivada sigue al ruido, no a la señal. "
+        f"**La mejor ventana de este caso es {optima}**, con `{errores.min():.4f}`.\n\n"
+        "| Ventana | Error medio |\n|---|---|\n"
+        + "\n".join(f"| {ancho} | {valor:.4f} |"
+                    for ancho, valor in zip(ventanas[::5], errores[::5]))
+        + "\n\n*Mira el panel 3: a la izquierda manda el ruido, a la derecha el "
+        "filtro se come la señal. El mínimo es lo que hay que buscar, y no está "
+        "en los extremos.*"
+    )
+    return {"ventana": ventana, "error": error_elegida, "ventana_optima": optima}

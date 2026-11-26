@@ -451,28 +451,35 @@ conserva mejor los picos y cuesta más.
 
 CONFIGURA_01 = '''
 #@title 🔧 4.3 · Configúralo tú (no lo programes)
-# Cambia los parámetros de las tres líneas y vuelve a ejecutar. Observa qué
-# pasa con el pico de la derivada cuando el ruido es el mismo y cambia N.
-import numpy as np
+# Cambia VENTANA y el RUÍDO del sensor y vuelve a ejecutar. El laboratorio
+# dibuja la señal, su derivada y el error según el ancho de la ventana.
+VENTANA = 7          # muestras que promedia la media móvil
+RUIDO = 0.01         # desviación estándar del sensor, en unidades de la señal
 
-N = 7                                   # muestras de la media móvil
-VENTANA = 11                            # muestras de Savitzky-Golay
-ORDEN = 3                               # orden del polinomio local
-
-t = np.linspace(0.0, 2.0, 2000)
-senal = np.sin(2 * np.pi * 1.0 * t) + np.random.default_rng(7).normal(0.0, 0.01, t.size)
-
-suave = np.convolve(senal, np.ones(N) / N, mode="same")
-gradiente = np.gradient(senal, t)
-gradiente_suave = np.gradient(suave, t)
-
-print(f"Derivada sin filtrar: máximo {np.max(np.abs(gradiente)):.3f}")
-print(f"Derivada filtrada:    máximo {np.max(np.abs(gradiente_suave)):.3f}")
-print("La derivada exacta del seno tiene máximo 2*pi =", round(2 * np.pi, 3))
-
-# Prueba también:  from scipy.signal import savgol_filter
-#                  savgol_filter(senal, VENTANA, ORDEN)
+FILTRO = laboratorio("filtrado", {"ventana": VENTANA, "ruido": RUIDO})
 '''
+
+OBSERVA_FILTRO_01 = """
+### 4.4 · Qué observar en el laboratorio del filtro
+
+Los tres paneles cuentan la misma historia en tres pasos:
+
+1. **La señal.** La línea gris es lo que entrega el sensor: la curva real más
+   ruido. La azul es la misma señal después de promediar `VENTANA` muestras. A
+   simple vista se parecen; la diferencia está en la derivada.
+2. **La derivada.** Al derivar la señal sin filtrar (gris), el ruido se
+   multiplica y tapa la curva real. La derivada de la señal filtrada (azul) sí
+   sigue a la exacta (negro a rayas). Ese es el motivo de filtrar antes de
+   derivar.
+3. **El ancho de la ventana.** El error no baja siempre: con ventanas pequeñas
+   manda el ruido y con ventanas grandes el filtro se come la señal y la
+   derivada se aplana. Hay un mínimo, y está marcado. Si eliges a ojo, casi
+   siempre eliges de más: promediar 30 muestras se ve muy limpio y es un error
+   grande.
+
+Cambia `VENTANA` y vuelve a ejecutar la celda: la línea azul del panel 3 se
+mueve. Con `VENTANA = 1` no hay filtro y el resultado es el de la señal cruda.
+"""
 
 CASO_01 = """
 ## 5.1 · Caso de ingeniería: aceleración de un brazo robótico
@@ -639,6 +646,7 @@ pregunta(2)
 """),
         _md(CATALOGO_01),
         _py(CONFIGURA_01),
+        _md(OBSERVA_FILTRO_01),
         _md(CASO_01),
         _py("""
 #@title 🏭 5.1 · Tus datos y los métodos admitidos
