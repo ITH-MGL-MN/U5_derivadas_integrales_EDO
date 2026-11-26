@@ -514,6 +514,12 @@ síntomas → causa → qué cambiar.
   ecuación sin formatear se lee peor que mal, se lee mal.
 - Las preguntas usan botones numerados (o casillas si algún día hay preguntas de
   varias respuestas). El alumno **nunca** escribe un número en un `input()`.
+- **Ninguna celda del cuaderno termina en una llamada "desnuda".** Si una
+  función devuelve algo, la celda lo guarda en una variable con nombre
+  (`MANO = mano_enunciado(...)`, `CASO = caso()`, `NOTA, TOPE = calificar()`).
+  En Jupyter la última expresión de una celda muestra su `repr`, y un
+  diccionario suelto debajo de una tabla bonita solo distrae. Los `return` se
+  conservan: las pruebas y el alumno los pueden usar.
 - Español de México, decimales con punto, unidades explícitas.
 
 ---

@@ -208,17 +208,17 @@ MI_CUENTA = identificacion()
 
 CIERRE = '''
 #@title 🧮 6.1 · Calificar
-calificar()
+NOTA, TOPE = calificar()
 '''
 
 CIERRE_ENVIO = '''
 #@title 📤 6.2 · Enviar
-enviar()
+ENVIO = enviar()
 '''
 
 CIERRE_CONSULTA = '''
 #@title 🔎 6.3 · Consultar la calificación guardada
-consultar_calificacion()
+GUARDADO = consultar_calificacion()
 '''
 
 
@@ -543,14 +543,16 @@ print(f"Velocidad angular máxima: {velocidad_max:.4f} rad/s")
 REVISA_01 = '''
 #@title ✅ 5.1.2 · Revisar el caso
 # Declara el método que usaste y entrega tu número.
-caso_revisar(metodo="derivada_centrada", resultados={"velocidad_max": velocidad_max})
+VEREDICTO = caso_revisar(metodo="derivada_centrada", resultados={"velocidad_max": velocidad_max})
 '''
 
 CIERRE_MD_01 = """
 ## 6 · Cierre
 
-`calificar()` suma tus tres preguntas y el caso, y normaliza a 100.
-`enviar()` manda el resultado al backend del curso; `consultar_calificacion()`
+`calificar()` suma tus tres preguntas y el caso, y normaliza a 100. El resultado
+queda en `NOTA` y `TOPE`, por si quieres consultarlo después.
+
+`enviar()` manda el resultado al backend del curso y `consultar_calificacion()`
 te dice lo que quedó guardado. Sin conexión, `enviar()` avisa y no falla.
 
 Si te quedó duda de algún método que no programaste, la
@@ -575,12 +577,12 @@ pregunta(1)
         _md(TEORIA_01),
         _py("""
 #@title ✍️ 3.2 · Tu ejercicio a mano
-mano_enunciado("derivada_atras")
+MANO = mano_enunciado("derivada_atras")
 """),
         _py("""
 #@title ✍️ 3.2 · Comprueba tu resultado
 # Escribe aquí el número que calculaste (con 4 decimales).
-mano_comprueba("derivada_atras", 0.0)
+ACIERTO = mano_comprueba("derivada_atras", 0.0)
 """),
         _md(CONTRATO_01),
         _py('''
@@ -620,11 +622,11 @@ def derivada_centrada(t, y, i):
 '''),
         _py("""
 #@title ▶️ 3.3 · Compáralas con la referencia
-practica(derivada_atras)
+APROBADA_ATRAS = practica(derivada_atras)
 """),
         _py("""
 #@title ▶️ 3.3 · La centrada, contra la referencia
-practica(derivada_centrada)
+APROBADA_CENTRADA = practica(derivada_centrada)
 """),
         _py("""
 #@title 📊 3.4 · Laboratorio
