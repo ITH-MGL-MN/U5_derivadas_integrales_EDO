@@ -95,3 +95,28 @@ En MATLAB no hay una función estándar de Simpson: se resuelve con `integral`
 - **¿Necesitas el valor en cada instante?** Acumulado, no la integral total.
 - **¿Quieres más orden gratis?** Con muestras uniformes, Simpson 1/3 sube de
   $O(h^2)$ a $O(h^4)$ sin evaluar nada nuevo.
+
+## Integrar también filtra el ruido
+
+Es el contraste con la derivación y conviene tenerlo claro:
+
+| Operación | Qué le hace al ruido | Por qué |
+|---|---|---|
+| Derivar | lo **amplifica**, y mucho | Resta dos muestras vecinas y divide entre un paso pequeño: el ruido entra completo y multiplicado |
+| Integrar | lo **atenúa** en términos relativos | Suma muchos valores; las fluctuaciones de un signo se compensan con las del otro |
+
+Con una señal muestreada a 200 Hz y un ruido de $0.05$, la derivada numérica
+sale con un error medio unas **150 veces** mayor que el ruido, mientras que la
+integral acumulada queda por debajo del propio ruido y al final del intervalo se
+aparta apenas unas milésimas del valor exacto.
+
+La razón fina: al integrar, el ruido crece como la raíz del número de muestras,
+mientras la señal crece con el número de muestras. El error **relativo** baja
+aunque el absoluto suba. La derivación hace lo contrario y, además, no tiene
+memoria: cada estimación depende solo de dos muestras.
+
+De ahí dos consecuencias prácticas: en un lazo con sensor ruidoso conviene
+integrar antes que derivar, y una señal ruidosa nunca se deriva dos veces sin
+filtrar. El libro lo dice en el pie de la figura 23.5: la operación inversa de
+la integración tiende a suavizar los errores de los datos.
+

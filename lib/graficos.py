@@ -559,3 +559,83 @@ def _lab_trapecio_simpson(datos: dict) -> dict:
         "entre 16: ese es el efecto de ganar dos órdenes."
     )
     return {"error_trapecio": errores_trapecio[-1], "error_simpson": errores_simpson[-1]}
+
+
+def _lab_ruido(datos: dict) -> dict:
+    """Laboratorio de por qué derivar amplifica el ruido e integrar lo atenúa.
+
+    Es el contraste que cierra el tema. Con la **misma** señal medida, tres
+    paneles apilados:
+
+    1. la señal medida y la real;
+    2. su derivada numérica contra la derivada exacta: el ruido aparece
+       multiplicado y tapa la curva;
+    3. su integral acumulada contra la integral exacta: las dos se pegan, y el
+       error se queda pequeño.
+
+    Args:
+        datos: `a`, `b` y `ruido` (desviación estándar del sensor). La señal es
+            f(t) = 2 + 1.5t - 0.4t² + e^(-t), muestreada a 200 Hz.
+
+    Returns:
+        dict: `{"ruido", "error_derivada", "error_integral"}` con las raíces
+        del error cuadrático medio de cada operación.
+    """
+    a = float(datos.get("a", 0.0))
+    b = float(datos.get("b", 2.0))
+    ruido = float(datos.get("ruido", 0.05))
+    muestreo = 200.0
+
+    t = np.arange(a, b, 1.0 / muestreo)
+    real = _senal_de_prueba(t)
+    generador = np.random.default_rng(5)
+    medida = real + generador.normal(0.0, ruido, t.size)
+
+    exacta_derivada = 1.5 - 0.8 * t - np.exp(-t)
+    derivada = np.gradient(medida, t)
+
+    anchos = np.diff(t)
+    integral = np.concatenate(([0.0], np.cumsum(0.5 * (medida[:-1] + medida[1:]) * anchos)))
+    exacta_integral = np.array([_integral_exacta(a, x) for x in t])
+
+    error_derivada = float(np.sqrt(np.mean((derivada - exacta_derivada) ** 2)))
+    error_integral = float(np.sqrt(np.mean((integral - exacta_integral) ** 2)))
+    ruido_medido = float(np.std(medida - real))
+
+    figura, (eje1, eje2, eje3) = plt.subplots(3, 1, figsize=(6.5, 11))
+
+    eje1.plot(t, medida, color="0.65", lw=0.8, label="señal medida")
+    eje1.plot(t, real, "k--", lw=1.6, label="señal real")
+    _estilo(eje1, f"1) La señal y su ruido (σ = {ruido})", "tiempo (s)", "f(t)")
+    eje1.legend(fontsize=8, loc="upper right")
+
+    eje2.plot(t, derivada, color="tab:red", lw=0.8, label="derivada de la señal medida")
+    eje2.plot(t, exacta_derivada, "k--", lw=1.6, label="derivada exacta")
+    _estilo(eje2, "2) Derivar: el ruido se multiplica y tapa la curva", "tiempo (s)", "f'(t)")
+    eje2.legend(fontsize=8, loc="upper right")
+
+    eje3.plot(t, integral, "b-", lw=2, label="integral de la señal medida")
+    eje3.plot(t, exacta_integral, "k--", lw=1.6, label="integral exacta")
+    _estilo(eje3, "3) Integrar: las dos curvas se pegan", "tiempo (s)", "integral acumulada")
+    eje3.legend(fontsize=8, loc="upper left")
+
+    figura.tight_layout()
+    plt.show()
+
+    mostrar(
+        f"**Ruido en la señal:** `{ruido_medido:.4f}` (desviación estándar de lo "
+        "que el sensor agrega a la curva real).\n\n"
+        "| Operación | Error medio (RMS) | Respecto al ruido |\n|---|---|---|\n"
+        f"| derivar | {error_derivada:.4f} | × {error_derivada / ruido_medido:.0f} |\n"
+        f"| integrar | {error_integral:.4f} | × {error_integral / ruido_medido:.2f} |\n\n"
+        f"Al final del intervalo, la integral medida se aparta de la exacta apenas "
+        f"`{abs(integral[-1] - exacta_integral[-1]):.4f}` sobre un total de "
+        f"`{exacta_integral[-1]:.4f}`.\n\n"
+        "*Derivar resta dos muestras vecinas y divide entre un paso pequeño: el "
+        "ruido entra completo y multiplicado. Integrar suma muchos valores y las "
+        "fluctuaciones de signo opuesto se compensan: el ruido crece como la raíz "
+        "del número de muestras, mientras la señal crece con el número de muestras, "
+        "así que el error relativo baja.*"
+    )
+    return {"ruido": ruido_medido, "error_derivada": error_derivada,
+            "error_integral": error_integral}

@@ -19,6 +19,7 @@ Uso:
 from __future__ import annotations
 
 import argparse
+import hashlib
 import sys
 from pathlib import Path
 
@@ -38,12 +39,22 @@ DOCS = "https://github.com/" + REPO + "/blob/main/docs/"
 
 def _md(texto: str):
     """Celda de markdown, sin espacios sobrantes al inicio ni al final."""
-    return nbf.v4.new_markdown_cell(texto.strip() + "\n")
+    return nbf.v4.new_markdown_cell(texto.strip() + "\n", id=_identificador(texto))
 
 
 def _py(texto: str):
     """Celda de código, sin espacios sobrantes al inicio ni al final."""
-    return nbf.v4.new_code_cell(texto.strip() + "\n")
+    return nbf.v4.new_code_cell(texto.strip() + "\n", id=_identificador(texto))
+
+
+def _identificador(texto: str) -> str:
+    """Identificador estable de una celda, derivado de su contenido.
+
+    nbformat inventa un id al azar en cada corrida, y eso hace que el cuaderno
+    aparezca modificado aunque nada haya cambiado. Con un hash del texto, dos
+    generaciones del mismo contenido dan el mismo archivo.
+    """
+    return hashlib.sha1(texto.strip().encode("utf-8")).hexdigest()[:8]
 
 
 def _rellena(texto: str) -> str:
@@ -821,6 +832,38 @@ Los tres paneles responden tres preguntas distintas:
 > batería eso es carga que se pierde de la cuenta, no ruido.
 """
 
+RUIDO_02 = """
+### 3.5 · Integrar también filtra el ruido
+
+En el cuaderno anterior viste que **derivar amplifica** el ruido: una
+fluctuación mínima en la señal se convierte en un zigzag enorme en la derivada.
+Con la integral pasa lo contrario. No es casualidad, es la operación misma:
+
+- **derivar** resta dos muestras vecinas y divide entre un paso pequeño. La
+  resta deja el ruido completo y la división lo multiplica por el inverso del
+  paso.
+- **integrar** suma muchos valores. Las fluctuaciones de un signo se compensan
+  con las del otro, así que el ruido crece apenas como la raíz del número de
+  muestras, mientras la señal crece con el número de muestras: el error
+  **relativo** baja.
+
+La celda siguiente lo mide con la misma señal ruidosa de los dos casos.
+
+<details><summary>Qué mirar en los tres paneles</summary>
+
+1. La señal medida es la real más ruido: a simple vista, casi la misma curva.
+2. **Derivar** destruye la información: la derivada de la señal medida es un
+   zigzag que tapa la derivada exacta.
+3. **Integrar** la conserva: la integral de la señal medida se pega a la exacta,
+   y al final del intervalo se aparta apenas unas milésimas.
+
+Esa es la razón por la que en la pregunta anterior integrar no amplifica el
+ruido, y también la razón por la que en un lazo de control se prefiere integrar
+antes que derivar cuando el sensor es ruidoso.
+
+</details>
+"""
+
 CATALOGO_02 = """
 ## 4.1 · Lo que no se programa, pero sí se elige
 
@@ -1055,8 +1098,13 @@ APROBADA_MEDIO = practica(integral_punto_medio)
 laboratorio("rectangulos")
 """),
         _md(OBSERVA_02),
+        _md(RUIDO_02),
         _py("""
-#@title 🧪 3.5 · Pregunta 2
+#@title 📊 3.5 · Laboratorio: derivar contra integrar con la misma señal
+RUIDO_LAB = laboratorio("ruido")
+"""),
+        _py("""
+#@title 🧪 3.6 · Pregunta 2
 pregunta(2)
 """),
         _md(_rellena(CATALOGO_02)),
