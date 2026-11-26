@@ -1,0 +1,8 @@
+{
+  "// Pylance": "El cuaderno importa desde lib/ (robomat, graficos, pantalla). Con esto F12 lleva a la definición aunque el repositorio se abra solo, sin el workspace del curso.",
+  "python.analysis.extraPaths": ["lib"],
+  "python.analysis.diagnosticSeverityOverrides": {
+    "reportWildcardImportFromLibrary": "none",
+    "reportMissingImports": "warning"
+  }
+}

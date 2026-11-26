@@ -130,7 +130,7 @@ def _lab_derivada_atras(datos: dict) -> dict:
     atras = (y[i0] - y[i0 - 1]) / (x[i0] - x[i0 - 1])
     centrada = (y[i0 + 1] - y[i0 - 1]) / (x[i0 + 1] - x[i0 - 1])
 
-    figura, (eje1, eje2, eje3) = plt.subplots(1, 3, figsize=(13, 3.6))
+    figura, (eje1, eje2, eje3) = plt.subplots(3, 1, figsize=(6.5, 11))
 
     eje1.plot(x, y, "o-", lw=1, ms=4, label="muestras")
     eje1.plot([x[i0 - 1], x[i0]], [y[i0 - 1], y[i0]], "r-", lw=2, label="secante hacia atrás")
@@ -195,7 +195,7 @@ def _lab_derivada_centrada(datos: dict) -> dict:
     atras = (y[i0] - y[i0 - 1]) / (x[i0] - x[i0 - 1])
     centrada = (y[i0 + 1] - y[i0 - 1]) / (x[i0 + 1] - x[i0 - 1])
 
-    figura, (eje1, eje2, eje3) = plt.subplots(1, 3, figsize=(13, 3.6))
+    figura, (eje1, eje2, eje3) = plt.subplots(3, 1, figsize=(6.5, 11))
 
     eje1.plot(x, y, "o-", lw=1, ms=4, label="muestras")
     eje1.plot([x[i0 - 1], x[i0 + 1]], [y[i0 - 1], y[i0 + 1]], "g-", lw=2,
